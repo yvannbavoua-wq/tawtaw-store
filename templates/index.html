@@ -84,6 +84,41 @@
     </div>
   </main>
 
+  <!-- 🤖 BOUTON FLOATING CHAT IA -->
+  <div class="fixed bottom-6 right-6 z-50">
+    <button onclick="toggleAiChat()" class="bg-red-600 text-white font-bold p-3.5 rounded-full shadow-2xl hover:scale-105 transition flex items-center justify-center gap-2">
+      <i class="fa-solid fa-robot text-lg"></i>
+      <span class="text-xs font-black uppercase hidden md:inline">Styliste IA</span>
+    </button>
+  </div>
+
+  <!-- 🤖 FENÊTRE DE CHAT IA -->
+  <div id="aiChatWindow" class="hidden fixed bottom-20 right-6 w-80 md:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 flex flex-col overflow-hidden">
+    <div class="bg-gradient-to-r from-red-600 to-black text-white p-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-robot text-lg"></i>
+        <div>
+          <h4 class="text-xs font-black uppercase">STYLISTE IA TATAW</h4>
+          <p class="text-[9px] text-gray-300">Conseil & Recommandation Look</p>
+        </div>
+      </div>
+      <button onclick="toggleAiChat()" class="text-white font-bold text-sm">✕</button>
+    </div>
+
+    <div id="aiMessages" class="p-3 h-64 overflow-y-auto space-y-2 text-xs">
+      <div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%]">
+        Bonjour ! Je suis votre conseiller style IA. Que recherchez-vous aujourd'hui ? (ex: tenue homme, style soirée...)
+      </div>
+    </div>
+
+    <div class="p-2 border-t border-gray-200 dark:border-gray-800 flex gap-1.5 bg-gray-50 dark:bg-gray-950">
+      <input type="text" id="aiInput" placeholder="Ex: Propose-moi une tenue..." class="flex-grow text-xs p-2 rounded-xl border dark:border-gray-700 dark:bg-gray-800 dark:text-white outline-none" onkeypress="if(event.key==='Enter') sendAiMessage()">
+      <button onclick="sendAiMessage()" class="bg-black dark:bg-white text-white dark:text-black font-bold px-3 py-2 rounded-xl text-xs">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- MODAL AUTHENTIFICATION -->
   <div id="authModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl relative">
@@ -125,6 +160,45 @@
     function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
     function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
     function toggleCart() { document.getElementById('cartSidebar').classList.toggle('translate-x-full'); }
+
+    function toggleAiChat() {
+      document.getElementById('aiChatWindow').classList.toggle('hidden');
+    }
+
+    async function sendAiMessage() {
+      const input = document.getElementById('aiInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chatBox = document.getElementById('aiMessages');
+      chatBox.innerHTML += `<div class="bg-black text-white p-2 rounded-xl ml-auto max-w-[80%] text-right">${text}</div>`;
+      input.value = '';
+
+      const res = await fetch('/api/ai-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+
+      let recsHtml = '';
+      if (data.products && data.products.length > 0) {
+        recsHtml = '<div class="grid grid-cols-2 gap-1.5 mt-2">';
+        data.products.forEach(p => {
+          recsHtml += `
+            <div class="bg-white dark:bg-gray-900 border p-1.5 rounded-lg text-center">
+              <img src="${p.image}" class="w-full h-16 object-cover rounded mb-1">
+              <p class="font-bold text-[9px] truncate">${p.name}</p>
+              <p class="text-red-500 font-bold text-[9px]">${p.price} FCFA</p>
+            </div>
+          `;
+        });
+        recsHtml += '</div>';
+      }
+
+      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2">${data.reply}${recsHtml}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
     function showSection(sec) {
       const p = document.getElementById('productContainer');
