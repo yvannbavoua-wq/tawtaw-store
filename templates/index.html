@@ -81,8 +81,8 @@
         </div>
         <div class="p-3 flex flex-col flex-grow">
           <h3 class="text-xs font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">{{ product.name }}</h3>
-          <p class="text-xs font-black text-gray-900 dark:text-gray-200 mb-2">{{ product.price if product.price else 'Sur demande' }} FCFA</p>
-          <button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price if product.price else \'Sur demande\' }}')" class="mt-auto bg-black hover:bg-gray-800 dark:bg-white dark:text-black text-white text-[10px] font-bold py-2 rounded-xl uppercase transition">Ajouter au panier</button>
+          <p class="text-xs font-black text-gray-900 dark:text-gray-200 mb-2">{% if product.price %}{{ product.price }}{% else %}Sur demande{% endif %} FCFA</p>
+          <button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price }}')" class="mt-auto bg-black hover:bg-gray-800 dark:bg-white dark:text-black text-white text-[10px] font-bold py-2 rounded-xl uppercase transition">Ajouter au panier</button>
         </div>
       </div>
       {% endfor %}
@@ -136,9 +136,9 @@
             </select>
           {% endif %}
           <div class="mt-auto flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
-            <span class="text-xs font-black text-gray-900 dark:text-white">{{ product.price if product.price else 'Sur demande' }} FCFA</span>
+            <span class="text-xs font-black text-gray-900 dark:text-white">{% if product.price %}{{ product.price }}{% else %}Sur demande{% endif %} FCFA</span>
             {% if product.in_stock %}
-              <button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price if product.price else \'Sur demande\' }}')" class="bg-black dark:bg-white text-white dark:text-black p-2 rounded-xl text-xs transition active:scale-95">
+              <button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price }}')" class="bg-black dark:bg-white text-white dark:text-black p-2 rounded-xl text-xs transition active:scale-95">
                 <i class="fa-solid fa-plus"></i>
               </button>
             {% else %}
