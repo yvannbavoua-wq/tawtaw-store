@@ -1,7 +1,5 @@
-import random
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from twilio.rest import Client
 
 app = Flask(__name__)
 app.secret_key = 'tataw_secret_key_change_in_production'
@@ -11,14 +9,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tataw.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Credentials Twilio pour WhatsApp (Optionnel)
-TWILIO_ACCOUNT_SID = 'votre_account_sid'
-TWILIO_AUTH_TOKEN = 'votre_auth_token'
-TWILIO_WHATSAPP_NUMBER = 'whatsapp:+14155238886'
-
-twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) if TWILIO_ACCOUNT_SID != 'votre_account_sid' else None
-
-# Modèle Produit mis à jour (avec options/modèles et description)
+# Modèle Produit
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -26,16 +17,15 @@ class Product(db.Model):
     subcategory = db.Column(db.String(50), nullable=False)
     image_url = db.Column(db.Text, nullable=False)
     price = db.Column(db.String(50), nullable=True)
-    options = db.Column(db.String(200), nullable=True) # Modèles, tailles, couleurs...
+    options = db.Column(db.String(200), nullable=True) # Modèles, pointures, couleurs, tailles
     description = db.Column(db.Text, nullable=True)
 
-# Modèle Utilisateur pour l'authentification WhatsApp
+# Modèle Utilisateur
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), nullable=False)
     phone = db.Column(db.String(30), unique=True, nullable=False)
-    otp_code = db.Column(db.String(6), nullable=True)
-    is_verified = db.Column(db.Boolean, default=False)
+    is_verified = db.Column(db.Boolean, default=True)
 
 with app.app_context():
     db.create_all()
@@ -46,9 +36,9 @@ def index():
     user = User.query.get(session.get('user_id')) if session.get('user_id') else None
     return render_template('index.html', products=products, user=user)
 
-# --- Authentification WhatsApp (OTP) ---
+# --- Authentification WhatsApp Simple Directe ---
 @app.route('/login-whatsapp', methods=['POST'])
-def request_otp():
+def login_whatsapp():
     username = request.form.get('username')
     phone = request.form.get('phone')
 
@@ -56,55 +46,27 @@ def request_otp():
         flash("Veuillez remplir tous les champs.")
         return redirect(url_for('index'))
 
-    otp = str(random.randint(100000, 999999))
     user = User.query.filter_by(phone=phone).first()
     if not user:
-        user = User(username=username, phone=phone)
+        user = User(username=username, phone=phone, is_verified=True)
         db.session.add(user)
+    else:
+        user.username = username
+        user.is_verified = True
     
-    user.username = username
-    user.otp_code = otp
     db.session.commit()
 
-    if twilio_client:
-        try:
-            twilio_client.messages.create(
-                from_=TWILIO_WHATSAPP_NUMBER,
-                body=f"Bonjour {username} ! Votre code de vérification TATAW est : {otp}",
-                to=f"whatsapp:{phone}"
-            )
-            session['pending_phone'] = phone
-            flash("Code envoyé par WhatsApp !")
-            return redirect(url_for('verify_otp_page'))
-        except Exception:
-            flash("Erreur lors de l'envoi WhatsApp.")
-            return redirect(url_for('index'))
-    else:
-        session['pending_phone'] = phone
-        return redirect(url_for('verify_otp_page'))
+    session['user_id'] = user.id
+    session['username'] = user.username
 
-@app.route('/verify-otp-page')
-def verify_otp_page():
-    return render_template('verify_otp.html')
+    flash(f"Bienvenue {user.username} !")
+    return redirect(url_for('index'))
 
-@app.route('/verify-otp', methods=['POST'])
-def verify_otp():
-    user_code = request.form.get('otp_code')
-    phone = session.get('pending_phone')
-    user = User.query.filter_by(phone=phone).first() if phone else None
-
-    if user and user.otp_code == user_code:
-        user.is_verified = True
-        user.otp_code = None
-        db.session.commit()
-        session['user_id'] = user.id
-        session['username'] = user.username
-        session.pop('pending_phone', None)
-        flash(f"Bienvenue {user.username} !")
-        return redirect(url_for('index'))
-    else:
-        flash("Code incorrect. Réessayez.")
-        return redirect(url_for('verify_otp_page'))
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("Vous êtes déconnecté.")
+    return redirect(url_for('index'))
 
 # --- Administration ---
 @app.route('/admin')
@@ -153,3 +115,4 @@ def delete_product(id):
 
 if __name__ == '__main__':
     app.run(debug=True)
+

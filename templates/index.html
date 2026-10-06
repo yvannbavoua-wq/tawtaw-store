@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TATAW Store - L'Amour qui ne s'efface jamais</title>
   
-  <!-- Balises SEO Google -->
   <meta name="description" content="TATAW - Boutique officielle à Yaoundé. Vêtements homme, femme et cosmétiques. Commandez directement sur WhatsApp.">
   <meta name="keywords" content="TATAW, boutique Yaoundé, vêtements Cameroun, t-shirts, mode Yaoundé">
 
@@ -17,20 +16,20 @@
   <!-- 1. BANNIÈRE PROMO EN HAUT -->
   <div class="bg-gradient-to-r from-red-600 via-black to-red-600 text-white py-2 px-4 text-center text-[11px] font-black uppercase tracking-wider flex items-center justify-between shadow-md">
     <div class="w-full text-center">
-      🔥 DROP OFFICIEL : LIVRAISON GRATUITE AUX 5 PREMIERS CLIENTS ! 🔥
+      🔥 DROP OFFICIEL : -20% SUR CHAQUE ARTICLE | LIVRAISON GRATUITE AUX 5 PREMIERS CLIENTS ! 🔥
     </div>
   </div>
 
   <!-- 2. NAVBAR STYLE NIKE AVEC LOGO SCORPION -->
   <nav class="bg-white border-b border-gray-200 sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
     <a href="/" class="flex items-center gap-2">
-      <!-- Collez ici l'URL de votre logo Scorpion hébergé sur ImgBB -->
       <img src="https://i.ibb.co/v66HHnLX/IMG-1652.jpg" alt="TATAW Logo" class="h-9 w-auto object-contain">
     </a>
 
     <div class="flex items-center gap-4">
       {% if session.get('username') %}
         <span class="text-xs font-bold text-gray-700">👤 {{ session.get('username') }}</span>
+        <a href="/logout" class="text-[10px] text-red-600 font-bold uppercase underline">Déconnexion</a>
       {% else %}
         <button onclick="openAuthModal()" class="text-xs bg-black text-white px-3 py-1.5 rounded-full font-bold uppercase">Connexion</button>
       {% endif %}
@@ -114,17 +113,17 @@
     </div>
   </div>
 
-  <!-- MODAL AUTHENTIFICATION WHATSAPP -->
+  <!-- MODAL AUTHENTIFICATION DIRECTE -->
   <div id="authModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl relative">
       <button onclick="closeAuthModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
       <h3 class="text-base font-black uppercase text-gray-900 mb-1">CONNEXION TATAW</h3>
-      <p class="text-xs text-gray-500 mb-4">Entrez vos données pour recevoir un code WhatsApp</p>
+      <p class="text-xs text-gray-500 mb-4">Entrez vos données pour vous identifier</p>
       <form action="/login-whatsapp" method="POST" class="space-y-3">
-        <input type="text" name="username" placeholder="Nom de compte / Pseudo" required class="w-full text-xs p-3 border rounded-xl">
+        <input type="text" name="username" placeholder="Nom complet / Pseudo" required class="w-full text-xs p-3 border rounded-xl">
         <input type="tel" name="phone" placeholder="Numéro WhatsApp (ex: +237600000000)" required class="w-full text-xs p-3 border rounded-xl">
-        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-xs uppercase flex items-center justify-center gap-2">
-          <i class="fa-brands fa-whatsapp text-base"></i> Recevoir le code
+        <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 rounded-xl text-xs uppercase">
+          Accéder au site 🚀
         </button>
       </form>
     </div>
