@@ -38,7 +38,9 @@ def init_db():
         ]
         db.session.bulk_save_objects(default_products)
         db.session.commit()
-
+with app.app_context():
+    init_db()
+    
 @app.route('/')
 def index():
     products = Product.query.all()
