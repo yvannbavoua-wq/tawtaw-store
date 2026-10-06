@@ -132,30 +132,60 @@
     </div>
   </div>
 
-  <!-- PANIER SIDEBAR -->
-  <div id="cartSidebar" class="fixed inset-y-0 right-0 w-80 bg-white dark:bg-gray-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 p-4 flex flex-col">
-    <div class="flex items-center justify-between pb-3 border-b">
+  <!-- PANIER SIDEBAR AVEC CODE PROMO -->
+  <div id="cartSidebar" class="fixed inset-y-0 right-0 w-80 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 p-4 flex flex-col">
+    <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
       <h3 class="font-black uppercase text-sm">Votre Panier</h3>
       <button onclick="toggleCart()" class="text-gray-500 font-bold">✕</button>
     </div>
+
+    <!-- Liste des articles dans le panier -->
     <div id="cart-items" class="flex-grow overflow-y-auto py-3 space-y-2"></div>
-    <button onclick="sendWhatsAppOrder()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl text-xs uppercase flex items-center justify-center gap-2">
+
+    <!-- SECTION APPLIQUER UN CODE PROMO ET TOTAL -->
+    <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl my-2 border border-gray-100 dark:border-gray-700 space-y-2">
+      <div class="flex gap-2">
+        <input type="text" id="cartPromoInput" placeholder="CODE PROMO" class="w-full text-xs p-2 rounded-lg border dark:border-gray-700 dark:bg-gray-900 font-mono font-bold uppercase text-gray-900 dark:text-white">
+        <button onclick="applyCartPromo()" class="bg-black dark:bg-white text-white dark:text-black font-bold text-xs px-3 rounded-lg uppercase">OK</button>
+      </div>
+
+      <div class="space-y-1 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs">
+        <div class="flex justify-between text-gray-500">
+          <span>Sous-total:</span>
+          <span id="cart-subtotal">0 FCFA</span>
+        </div>
+        <div id="discount-row" class="flex justify-between text-green-500 font-bold hidden">
+          <span id="discount-label">Réduction:</span>
+          <span id="cart-discount">-0 FCFA</span>
+        </div>
+        <div class="flex justify-between font-black text-sm text-gray-900 dark:text-white pt-1">
+          <span>TOTAL FINAL:</span>
+          <span id="cart-total" class="text-red-600">0 FCFA</span>
+        </div>
+      </div>
+    </div>
+
+    <button onclick="sendWhatsAppOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-xs uppercase flex items-center justify-center gap-2 shadow">
       <i class="fa-brands fa-whatsapp text-lg"></i> Commander sur WhatsApp
     </button>
   </div>
 
-  <!-- FOOTER -->
+  <!-- FOOTER AVEC VRAIS LIENS RS -->
   <footer class="bg-gray-900 text-white text-center py-8 px-4 border-t border-gray-800 mt-auto">
     <h4 class="text-xs font-black uppercase mb-1">COMMUNAUTÉ TATAW</h4>
     <div class="flex items-center justify-center gap-6 text-xl my-3">
-      <a href="https://www.instagram.com" target="_blank"><i class="fa-brands fa-instagram"></i></a>
-      <a href="https://www.tiktok.com" target="_blank"><i class="fa-brands fa-tiktok"></i></a>
+      <!-- Vrais liens Instagram et TikTok -->
+      <a href="https://www.instagram.com/tataw.999" target="_blank" class="hover:text-red-500 transition-colors"><i class="fa-brands fa-instagram"></i></a>
+      <a href="https://www.tiktok.com/@tataw_9990" target="_blank" class="hover:text-red-500 transition-colors"><i class="fa-brands fa-tiktok"></i></a>
     </div>
     <p class="text-[10px] text-gray-500">© 2026 TATAW. Powered by offx</p>
   </footer>
 
   <script>
-    let cart = [];
+    let cart = JSON.parse(localStorage.getItem('tataw_cart')) || [];
+    let appliedPromo = JSON.parse(localStorage.getItem('tataw_promo')) || null;
+
+    renderCart();
 
     function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
     function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
@@ -212,30 +242,96 @@
 
     function addToCart(id, name, price) {
       cart.push({ id, name, price });
-      document.getElementById('cart-count').innerText = cart.length;
+      localStorage.setItem('tataw_cart', JSON.stringify(cart));
       renderCart();
       toggleCart();
     }
 
+    function removeFromCart(i) {
+      cart.splice(i, 1);
+      localStorage.setItem('tataw_cart', JSON.stringify(cart));
+      renderCart();
+    }
+
+    async function applyCartPromo() {
+      const code = document.getElementById('cartPromoInput').value.trim().toUpperCase();
+      if (!code) return;
+
+      const response = await fetch('/api/check-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      const data = await response.json();
+
+      if (data.valid) {
+        appliedPromo = data;
+        localStorage.setItem('tataw_promo', JSON.stringify(data));
+        alert(`Code ${data.code} appliqué avec succès ! Réduction de ${data.discount}% accordée.`);
+      } else {
+        alert("Code promo invalide ou expiré");
+        appliedPromo = null;
+        localStorage.removeItem('tataw_promo');
+      }
+      renderCart();
+    }
+
     function renderCart() {
+      document.getElementById('cart-count').innerText = cart.length;
       const itemsContainer = document.getElementById('cart-items');
-      itemsContainer.innerHTML = cart.map((item, i) => `
-        <div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl">
-          <div>
-            <p class="font-bold">${item.name}</p>
-            <p class="text-[10px] font-bold text-red-600">${item.price} FCFA</p>
+      let subtotal = 0;
+
+      itemsContainer.innerHTML = cart.map((item, i) => {
+        const numPrice = parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0;
+        subtotal += numPrice;
+        return `
+          <div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl">
+            <div>
+              <p class="font-bold">${item.name}</p>
+              <p class="text-[10px] font-bold text-red-600">${item.price} FCFA</p>
+            </div>
+            <button onclick="removeFromCart(${i})" class="text-red-500 font-bold p-1">✕</button>
           </div>
-          <button onclick="cart.splice(${i},1); renderCart();" class="text-red-500">✕</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+
+      document.getElementById('cart-subtotal').innerText = subtotal.toLocaleString() + " FCFA";
+
+      let finalTotal = subtotal;
+      if (appliedPromo) {
+        const discountAmt = (subtotal * appliedPromo.discount) / 100;
+        finalTotal = subtotal - discountAmt;
+        document.getElementById('discount-row').classList.remove('hidden');
+        document.getElementById('discount-label').innerText = `Réduction (${appliedPromo.code} -${appliedPromo.discount}%):`;
+        document.getElementById('cart-discount').innerText = `- ${discountAmt.toLocaleString()} FCFA`;
+      } else {
+        document.getElementById('discount-row').classList.add('hidden');
+      }
+
+      document.getElementById('cart-total').innerText = finalTotal.toLocaleString() + " FCFA";
     }
 
     function sendWhatsAppOrder() {
       if (cart.length === 0) return alert("Votre panier est vide !");
+      let subtotal = 0;
       let msg = "Bonjour TATAW Store ! 👋%0AJ'aimerais passer une commande :%0A";
+      
       cart.forEach((item, index) => {
+        const numPrice = parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0;
+        subtotal += numPrice;
         msg += `%0A${index + 1}. *${item.name}* - ${item.price} FCFA`;
       });
+
+      msg += `%0A%0A💵 *Sous-total :* ${subtotal.toLocaleString()} FCFA`;
+
+      if (appliedPromo) {
+        const discountAmt = (subtotal * appliedPromo.discount) / 100;
+        const netTotal = subtotal - discountAmt;
+        msg += `%0A🎁 *Code Promo (${appliedPromo.code}) :* -${appliedPromo.discount}% (-${discountAmt.toLocaleString()} FCFA)`;
+        msg += `%0A🔥 *TOTAL NET À PAYER :* ${netTotal.toLocaleString()} FCFA`;
+      }
+
+      msg += "%0A%0AMerci !";
       window.open(`https://wa.me/237600000000?text=${msg}`, '_blank');
     }
   </script>
