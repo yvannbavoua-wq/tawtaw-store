@@ -57,7 +57,7 @@ def admin():
     products = Product.query.all()
     return render_template('admin.html', products=products)
 
-@app.route('/admin/add', methods=['POST'])
+@app.route('/admin/add-product', methods=['POST'])
 def add_product():
     name = request.form.get('name')
     category = request.form.get('category')
@@ -72,13 +72,19 @@ def add_product():
         flash('Produit ajouté avec succès !')
     return redirect(url_for('admin'))
 
-@app.route('/admin/delete/<int:id>')
+@app.route('/admin/update-product/<int:id>', methods=['POST'])
+def update_product(id):
+    product = Product.query.get_or_404(id)
+    product.image_url = request.form.get('image_url', product.image_url)
+    product.price = request.form.get('price', product.price)
+    db.session.commit()
+    flash('Produit mis à jour !')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/delete-product/<int:id>', methods=['POST', 'GET'])
 def delete_product(id):
     product = Product.query.get_or_404(id)
     db.session.delete(product)
     db.session.commit()
     flash('Produit supprimé !')
     return redirect(url_for('admin'))
-
-if __name__ == '__main__':
-    app.run(debug=True)
