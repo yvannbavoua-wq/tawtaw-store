@@ -1,15 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.secret_key = 'tataw_secret_key_change_in_production'
 
-# Configuration Base de données
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tataw.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Modèle Produit
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -17,10 +15,19 @@ class Product(db.Model):
     subcategory = db.Column(db.String(50), nullable=False)
     image_url = db.Column(db.Text, nullable=False)
     price = db.Column(db.String(50), nullable=True)
-    options = db.Column(db.String(200), nullable=True) # Modèles, pointures, couleurs, tailles
+    promo_info = db.Column(db.String(100), nullable=True)
+    options = db.Column(db.String(200), nullable=True)
     description = db.Column(db.Text, nullable=True)
+    is_featured = db.Column(db.Boolean, default=False)
+    in_stock = db.Column(db.Boolean, default=True)
 
-# Modèle Utilisateur
+class PromoCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    discount_percent = db.Column(db.Integer, nullable=False)
+    influencer_name = db.Column(db.String(100), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), nullable=False)
@@ -33,10 +40,63 @@ with app.app_context():
 @app.route('/')
 def index():
     products = Product.query.all()
+    featured_products = Product.query.filter_by(is_featured=True).all()
     user = User.query.get(session.get('user_id')) if session.get('user_id') else None
-    return render_template('index.html', products=products, user=user)
+    return render_template('index.html', products=products, featured_products=featured_products, user=user)
 
-# --- Authentification WhatsApp Simple Directe ---
+# --- API Assistant IA TATAW ---
+@app.route('/api/ai-assistant', methods=['POST'])
+def ai_assistant():
+    data = request.get_json()
+    user_msg = data.get('message', '').lower()
+    
+    products = Product.query.filter_by(in_stock=True).all()
+    recommendations = []
+    response_text = "Je suis votre Styliste IA TATAW ! 👋 "
+
+    if "homme" in user_msg or "garçon" in user_msg:
+        matched = [p for p in products if p.category.upper() == 'HOMME']
+        recommendations = matched[:3]
+        response_text += "Voici les meilleures pièces pour Homme de notre collection actuelle :"
+    elif "femme" in user_msg or "fille" in user_msg:
+        matched = [p for p in products if p.category.upper() == 'FEMME']
+        recommendations = matched[:3]
+        response_text += "Voici nos sélections coup de cœur pour Femme :"
+    elif "soirée" in user_msg or "chic" in user_msg or "style" in user_msg:
+        recommendations = products[:3]
+        response_text += "Pour un look urbain et élégant signé TATAW x offx, je vous recommande ces articles :"
+    else:
+        recommendations = products[:2]
+        response_text += "Voici nos pépites du moment disponibles immédiatement :"
+
+    recs_data = [{
+        'id': p.id,
+        'name': p.name,
+        'price': p.price or 'Sur demande',
+        'image': p.image_url
+    } for p in recommendations]
+
+    return jsonify({
+        'reply': response_text,
+        'products': recs_data
+    })
+
+# --- API Vérification Code Promo ---
+@app.route('/api/check-promo', methods=['POST'])
+def check_promo():
+    data = request.get_json()
+    code_input = data.get('code', '').strip().upper()
+    promo = PromoCode.query.filter_by(code=code_input, is_active=True).first()
+    
+    if promo:
+        return jsonify({
+            'valid': True,
+            'code': promo.code,
+            'discount': promo.discount_percent,
+            'influencer': promo.influencer_name or 'Offre Spéciale'
+        })
+    return jsonify({'valid': False, 'message': 'Code promo invalide ou expiré'})
+
 @app.route('/login-whatsapp', methods=['POST'])
 def login_whatsapp():
     username = request.form.get('username')
@@ -55,9 +115,9 @@ def login_whatsapp():
         user.is_verified = True
     
     db.session.commit()
-
     session['user_id'] = user.id
     session['username'] = user.username
+    session['phone'] = user.phone
 
     flash(f"Bienvenue {user.username} !")
     return redirect(url_for('index'))
@@ -72,7 +132,8 @@ def logout():
 @app.route('/admin')
 def admin():
     products = Product.query.all()
-    return render_template('admin.html', products=products)
+    promos = PromoCode.query.all()
+    return render_template('admin.html', products=products, promos=promos)
 
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
@@ -81,17 +142,43 @@ def add_product():
     subcategory = request.form.get('subcategory')
     image_url = request.form.get('image_url')
     price = request.form.get('price', '')
+    promo_info = request.form.get('promo_info', '')
     options = request.form.get('options', '')
     description = request.form.get('description', '')
+    is_featured = True if request.form.get('is_featured') else False
+    in_stock = True if request.form.get('in_stock') else False
 
     if name and category and subcategory and image_url:
         new_prod = Product(
             name=name, category=category, subcategory=subcategory,
-            image_url=image_url, price=price, options=options, description=description
+            image_url=image_url, price=price, promo_info=promo_info,
+            options=options, description=description,
+            is_featured=is_featured, in_stock=in_stock
         )
         db.session.add(new_prod)
         db.session.commit()
         flash('Produit ajouté !')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/add-promo', methods=['POST'])
+def add_promo():
+    code = request.form.get('code', '').strip().upper()
+    discount = request.form.get('discount', type=int)
+    influencer = request.form.get('influencer', '')
+
+    if code and discount:
+        new_promo = PromoCode(code=code, discount_percent=discount, influencer_name=influencer)
+        db.session.add(new_promo)
+        db.session.commit()
+        flash('Code promo créé !')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/delete-promo/<int:id>', methods=['POST'])
+def delete_promo(id):
+    promo = PromoCode.query.get_or_404(id)
+    db.session.delete(promo)
+    db.session.commit()
+    flash('Code promo supprimé !')
     return redirect(url_for('admin'))
 
 @app.route('/admin/update-product/<int:id>', methods=['POST'])
@@ -99,8 +186,11 @@ def update_product(id):
     product = Product.query.get_or_404(id)
     product.image_url = request.form.get('image_url', product.image_url)
     product.price = request.form.get('price', product.price)
+    product.promo_info = request.form.get('promo_info', product.promo_info)
     product.options = request.form.get('options', product.options)
     product.description = request.form.get('description', product.description)
+    product.is_featured = True if request.form.get('is_featured') else False
+    product.in_stock = True if request.form.get('in_stock') else False
     db.session.commit()
     flash('Produit mis à jour !')
     return redirect(url_for('admin'))
@@ -115,4 +205,3 @@ def delete_product(id):
 
 if __name__ == '__main__':
     app.run(debug=True)
-

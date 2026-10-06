@@ -1,159 +1,318 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" id="html-root">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TATAW Store - L'Amour qui ne s'efface jamais</title>
-  
-  <meta name="description" content="TATAW - Boutique officielle à Yaoundé. Vêtements homme, femme et cosmétiques. Commandez directement sur WhatsApp.">
-  <meta name="keywords" content="TATAW, boutique Yaoundé, vêtements Cameroun, t-shirts, mode Yaoundé">
-
+  <title>TATAW x offx - Store Officiel</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans min-h-screen flex flex-col transition-colors duration-300">
 
-  <!-- 1. BANNIÈRE PROMO EN HAUT -->
-  <div class="bg-gradient-to-r from-red-600 via-black to-red-600 text-white py-2 px-4 text-center text-[11px] font-black uppercase tracking-wider flex items-center justify-between shadow-md">
-    <div class="w-full text-center">
-      🔥 DROP OFFICIEL : -20% SUR CHAQUE ARTICLE | LIVRAISON GRATUITE AUX 5 PREMIERS CLIENTS ! 🔥
-    </div>
+  <!-- BANNIÈRE EN HAUT -->
+  <div class="bg-gradient-to-r from-red-800 via-black to-red-800 text-white py-2 px-4 text-center text-[11px] font-black uppercase tracking-wider shadow-md">
+    ✨ PREMIER DROP OFFICIEL TATAW - LIVRAISON À YAOUNDÉ & PARTOUT AU CAMEROUN ✨
   </div>
 
-  <!-- 2. NAVBAR STYLE NIKE AVEC LOGO SCORPION -->
-  <nav class="bg-white border-b border-gray-200 sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
+  <!-- NAVBAR -->
+  <nav class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
     <a href="/" class="flex items-center gap-2">
       <img src="https://i.ibb.co/v66HHnLX/IMG-1652.jpg" alt="TATAW Logo" class="h-9 w-auto object-contain">
     </a>
 
-    <div class="flex items-center gap-4">
+    <div class="hidden md:flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 w-64">
+      <i class="fa-solid fa-magnifying-glass text-xs text-gray-400 mr-2"></i>
+      <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Rechercher un article..." class="bg-transparent text-xs outline-none w-full dark:text-white">
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button onclick="toggleDarkMode()" class="p-1.5 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white">
+        <i id="theme-icon" class="fa-solid fa-moon text-base"></i>
+      </button>
+
       {% if session.get('username') %}
-        <span class="text-xs font-bold text-gray-700">👤 {{ session.get('username') }}</span>
+        <span class="text-xs font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
+          👤 {{ session.get('username') }}
+        </span>
         <a href="/logout" class="text-[10px] text-red-600 font-bold uppercase underline">Déconnexion</a>
       {% else %}
-        <button onclick="openAuthModal()" class="text-xs bg-black text-white px-3 py-1.5 rounded-full font-bold uppercase">Connexion</button>
+        <button onclick="openAuthModal()" class="text-xs bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-full font-bold uppercase transition">Connexion</button>
       {% endif %}
       
-      <button onclick="toggleCart()" class="relative text-gray-800">
+      <button onclick="toggleCart()" class="relative text-gray-800 dark:text-white p-1">
         <i class="fa-solid fa-bag-shopping text-xl"></i>
-        <span id="cart-count" class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+        <span id="cart-count" class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow">0</span>
       </button>
     </div>
   </nav>
 
-  <!-- 3. BASCULEMENT DE NAVIGATION (Articles vs Bio) -->
-  <div class="max-w-xl mx-auto my-6 px-4 text-center">
-    <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Votre choix de navigation 🗣️</p>
-    <div class="grid grid-cols-2 gap-3 bg-gray-200 p-1.5 rounded-2xl">
-      <button onclick="showSection('articles')" id="btn-articles" class="py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all bg-black text-white shadow">
-        🛍️ Collections
+  <!-- BASCULE NAVIGATION COLLECTIONS VS BIO -->
+  <div class="max-w-xl mx-auto my-5 px-4 text-center">
+    <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">VOTRE CHOIX DE NAVIGATION 🗣</p>
+    <div class="grid grid-cols-2 gap-2 bg-gray-200 dark:bg-gray-800 p-1.5 rounded-2xl">
+      <button onclick="showSection('articles')" id="btn-articles" class="py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all bg-black text-white dark:bg-white dark:text-black shadow">
+        🛍️ COLLECTIONS
       </button>
-      <button onclick="showSection('bio')" id="btn-bio" class="py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all text-gray-600 hover:text-black">
-        📖 Notre Histoire (Bio)
+      <button onclick="showSection('bio')" id="btn-bio" class="py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all text-gray-600 dark:text-gray-400 hover:text-black">
+        📖 NOTRE HISTOIRE (BIO)
       </button>
     </div>
   </div>
 
-  <!-- SECTION BIO (Cachée par défaut) -->
-  <div id="section-bio" class="hidden max-w-2xl mx-auto my-8 p-6 bg-white rounded-2xl border border-gray-200 shadow-sm text-center">
-    <span class="bg-red-100 text-red-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">À propos de TATAW</span>
-    <h3 class="text-lg font-black uppercase text-gray-900 mt-3 mb-2">L'Amour qui ne s'efface jamais ✨</h3>
-    <p class="text-xs text-gray-600 leading-relaxed mb-4">
-      TATAW x offx est une marque née de la passion pour le style urbain et la qualité au Cameroun. Nous proposons des collections exclusives de vêtements et d'accessoires.
-    </p>
-    <button onclick="showSection('articles')" class="bg-black text-white text-xs font-bold py-2 px-5 rounded-xl uppercase">Voir le catalogue 🛒</button>
-  </div>
-
-  <!-- SECTION CATALOGUE PRODUITS -->
-  <main id="productContainer" class="max-w-6xl mx-auto px-4 py-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-grow">
-    {% for product in products %}
-    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
-      <div class="relative pt-[100%] bg-gray-100">
-        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover">
-        <span class="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">TAWTAW x offx</span>
+  <!-- NOUVEAUTÉS DE LA SEMAINE -->
+  {% if featured_products %}
+  <section class="max-w-6xl mx-auto px-4 mb-6 w-full">
+    <div class="bg-gradient-to-r from-red-600 to-black text-white rounded-2xl p-4 mb-3 flex items-center justify-between shadow-sm">
+      <div>
+        <span class="bg-white text-red-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">Drop Exclusif</span>
+        <h2 class="text-sm font-black uppercase mt-1">🔥 NOUVEAUTÉS DE LA SEMAINE</h2>
       </div>
-      <div class="p-3 flex flex-col flex-grow">
-        <p class="text-[9px] font-bold uppercase text-red-600 mb-1">{{ product.category }} • {{ product.subcategory }}</p>
-        <h3 class="text-xs font-bold text-gray-900 line-clamp-1 mb-1">{{ product.name }}</h3>
-        
-        {% if product.description %}
-          <p class="text-[10px] text-gray-500 mb-2 line-clamp-2">{{ product.description }}</p>
-        {% endif %}
-
-        {% if product.options %}
-          <select id="option-{{ product.id }}" class="w-full text-[10px] p-1.5 border rounded mb-2 bg-gray-50 font-medium">
-            {% for opt in product.options.split(',') %}
-              <option value="{{ opt.strip() }}">{{ opt.strip() }}</option>
-            {% endfor %}
-          </select>
-        {% endif %}
-
-        <div class="mt-auto flex items-center justify-between pt-2 border-t border-gray-100">
-          <span class="text-xs font-black text-gray-900">{{ product.price if product.price else 'Sur demande' }} FCFA</span>
-          <button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price }}')" class="bg-black hover:bg-gray-800 text-white p-2 rounded-xl text-xs">
-            <i class="fa-solid fa-plus"></i>
-          </button>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {% for product in featured_products %}
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-red-200 dark:border-red-900/50 overflow-hidden shadow-sm flex flex-col">
+        <div class="relative pt-[100%] bg-gray-100 dark:bg-gray-800">
+          <img src="{{ product.image_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover">
+          <span class="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase shadow">NEW</span>
+          {% if product.promo_info %}
+            <span class="absolute bottom-2 right-2 bg-yellow-400 text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase shadow">{{ product.promo_info }}</span>
+          {% endif %}
+        </div>
+        <div class="p-3 flex flex-col flex-grow">
+          <h3 class="text-xs font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">{{ product.name }}</h3>
+          <p class="text-xs font-black text-gray-900 dark:text-gray-200 mb-2">{{ product.price if product.price else 'Sur demande' }} FCFA</p>
+          <button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price if product.price else \'Sur demande\' }}')" class="mt-auto bg-black hover:bg-gray-800 dark:bg-white dark:text-black text-white text-[10px] font-bold py-2 rounded-xl uppercase transition">Ajouter au panier</button>
         </div>
       </div>
+      {% endfor %}
     </div>
-    {% endfor %}
+  </section>
+  {% endif %}
+
+  <!-- SECTION BIO -->
+  <div id="section-bio" class="hidden max-w-2xl mx-auto my-8 p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm text-center">
+    <span class="bg-red-100 text-red-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">À propos de TATAW</span>
+    <h3 class="text-lg font-black uppercase text-gray-900 dark:text-white mt-3 mb-2">L'Amour qui ne s'efface jamais ✨</h3>
+    <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+      TATAW x offx est une marque née de la passion pour le style urbain et la qualité au Cameroun. Nous proposons des collections exclusives de vêtements et d'accessoires.
+    </p>
+    <button onclick="showSection('articles')" class="bg-black text-white dark:bg-white dark:text-black text-xs font-bold py-2.5 px-6 rounded-xl uppercase shadow">Voir le catalogue 🛒</button>
+  </div>
+
+  <!-- CATALOGUE PRINCIPAL -->
+  <main id="productContainer" class="max-w-6xl mx-auto px-4 py-2 flex-grow w-full">
+    <div class="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
+      <button onclick="filterCategory('ALL')" class="cat-btn bg-black dark:bg-white text-white dark:text-black text-xs font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap shadow-sm">TOUS</button>
+      <button onclick="filterCategory('HOMME')" class="cat-btn bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap hover:bg-gray-300">HOMME</button>
+      <button onclick="filterCategory('FEMME')" class="cat-btn bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap hover:bg-gray-300">FEMME</button>
+      <button onclick="filterCategory('COSMETIQUES')" class="cat-btn bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap hover:bg-gray-300">COSMÉTIQUES</button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
+      {% for product in products %}
+      <div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col" data-name="{{ product.name|lower }}" data-category="{{ product.category|upper }}">
+        <div class="relative pt-[100%] bg-gray-100 dark:bg-gray-800">
+          <img src="{{ product.image_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover">
+          <span class="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">TATAW x offx</span>
+          {% if product.promo_info %}
+            <span class="absolute top-2 left-2 bg-yellow-400 text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase shadow">{{ product.promo_info }}</span>
+          {% endif %}
+          {% if not product.in_stock %}
+            <span class="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Épuisé</span>
+          {% endif %}
+        </div>
+        <div class="p-3 flex flex-col flex-grow">
+          <p class="text-[9px] font-bold uppercase text-red-600 mb-1">{{ product.category }} • {{ product.subcategory }}</p>
+          <h3 class="text-xs font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">{{ product.name }}</h3>
+          {% if product.description %}
+            <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-2 line-clamp-2 leading-tight">{{ product.description }}</p>
+          {% endif %}
+          {% if product.options %}
+            <select id="option-{{ product.id }}" class="w-full text-[10px] p-1.5 border rounded mb-2 bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 font-medium outline-none">
+              {% for opt in product.options.split(',') %}
+                <option value="{{ opt.strip() }}">{{ opt.strip() }}</option>
+              {% endfor %}
+            </select>
+          {% endif %}
+          <div class="mt-auto flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+            <span class="text-xs font-black text-gray-900 dark:text-white">{{ product.price if product.price else 'Sur demande' }} FCFA</span>
+            {% if product.in_stock %}
+              <button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price if product.price else \'Sur demande\' }}')" class="bg-black dark:bg-white text-white dark:text-black p-2 rounded-xl text-xs transition active:scale-95">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            {% else %}
+              <button disabled class="bg-gray-300 dark:bg-gray-800 text-gray-500 p-2 rounded-xl text-xs cursor-not-allowed">
+                <i class="fa-solid fa-ban"></i>
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   </main>
 
-  <!-- POP-UP DE BIENVENUE -->
-  <div id="welcomeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl relative border-2 border-red-500">
-      <button onclick="closeWelcomeModal()" class="absolute top-3 right-3 text-gray-400 hover:text-black font-bold">✕</button>
-      <span class="bg-red-600 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Nouveautés TATAW x offx</span>
-      <h2 class="text-lg font-black uppercase text-gray-900 mt-2 mb-2">BIENVENUE SUR TATAW STORE ! 🎉</h2>
-      <div class="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-left space-y-2">
-        <p class="text-xs font-bold text-red-900">💥 <strong>-20% DE RÉDUCTION</strong> sur chaque article !</p>
-        <p class="text-xs font-bold text-green-900">🚚 <strong>LIVRAISON GRATUITE</strong> pour les 5 premiers clients !</p>
+  <!-- WIDGET FLOATING IA STYLISTE -->
+  <div class="fixed bottom-6 right-6 z-50">
+    <button onclick="toggleAiChat()" class="bg-red-600 text-white font-bold p-3.5 rounded-full shadow-2xl hover:scale-105 transition flex items-center justify-center gap-2">
+      <i class="fa-solid fa-robot text-lg"></i>
+      <span class="text-xs font-black uppercase hidden md:inline">Styliste IA</span>
+    </button>
+  </div>
+
+  <!-- FENÊTRE CHAT IA -->
+  <div id="aiChatWindow" class="hidden fixed bottom-20 right-6 w-80 md:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 flex flex-col overflow-hidden">
+    <div class="bg-gradient-to-r from-red-600 to-black text-white p-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-robot text-lg"></i>
+        <div>
+          <h4 class="text-xs font-black uppercase">STYLISTE IA TATAW</h4>
+          <p class="text-[9px] text-gray-300">Conseil & Recommandation Look</p>
+        </div>
       </div>
-      <button onclick="closeWelcomeModal()" class="w-full bg-black text-white font-bold py-3 rounded-xl text-xs uppercase">PROFITER DES OFFRES 🛒</button>
+      <button onclick="toggleAiChat()" class="text-white font-bold text-sm">✕</button>
+    </div>
+
+    <div id="aiMessages" class="p-3 h-64 overflow-y-auto space-y-2 text-xs">
+      <div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%]">
+        Bonjour ! Je suis votre conseiller style IA. Que recherchez-vous aujourd'hui ? (ex: tenue homme, style soirée...)
+      </div>
+    </div>
+
+    <div class="p-2 border-t border-gray-200 dark:border-gray-800 flex gap-1.5 bg-gray-50 dark:bg-gray-950">
+      <input type="text" id="aiInput" placeholder="Ex: Propose-moi une tenue..." class="flex-grow text-xs p-2 rounded-xl border dark:border-gray-700 dark:bg-gray-800 dark:text-white outline-none" onkeypress="if(event.key==='Enter') sendAiMessage()">
+      <button onclick="sendAiMessage()" class="bg-black dark:bg-white text-white dark:text-black font-bold px-3 py-2 rounded-xl text-xs">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
     </div>
   </div>
 
   <!-- MODAL AUTHENTIFICATION DIRECTE -->
   <div id="authModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl relative">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl relative">
       <button onclick="closeAuthModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
-      <h3 class="text-base font-black uppercase text-gray-900 mb-1">CONNEXION TATAW</h3>
+      <h3 class="text-base font-black uppercase text-gray-900 dark:text-white mb-1">CONNEXION TATAW</h3>
       <p class="text-xs text-gray-500 mb-4">Entrez vos données pour vous identifier</p>
       <form action="/login-whatsapp" method="POST" class="space-y-3">
-        <input type="text" name="username" placeholder="Nom complet / Pseudo" required class="w-full text-xs p-3 border rounded-xl">
-        <input type="tel" name="phone" placeholder="Numéro WhatsApp (ex: +237600000000)" required class="w-full text-xs p-3 border rounded-xl">
-        <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 rounded-xl text-xs uppercase">
+        <input type="text" name="username" placeholder="Nom complet / Pseudo" required class="w-full text-xs p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white outline-none">
+        <input type="tel" name="phone" placeholder="Numéro WhatsApp (ex: +237600000000)" required class="w-full text-xs p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white outline-none">
+        <button type="submit" class="w-full bg-black dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-xs uppercase">
           Accéder au site 🚀
         </button>
       </form>
     </div>
   </div>
 
-  <!-- TIROIR PANIER (SIDEBAR) -->
-  <div id="cartSidebar" class="fixed inset-y-0 right-0 w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 p-4 flex flex-col">
-    <div class="flex items-center justify-between pb-3 border-b">
+  <!-- PANIER SIDEBAR -->
+  <div id="cartSidebar" class="fixed inset-y-0 right-0 w-80 bg-white dark:bg-gray-900 dark:text-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 p-4 flex flex-col">
+    <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
       <h3 class="font-black uppercase text-sm">Votre Panier</h3>
       <button onclick="toggleCart()" class="text-gray-500 font-bold">✕</button>
     </div>
     <div id="cart-items" class="flex-grow overflow-y-auto py-3 space-y-2"></div>
-    
-    <!-- OPTION DE LIVRAISON -->
-    <div class="p-3 bg-gray-100 rounded-xl my-2">
-      <label class="flex items-center gap-2 cursor-pointer">
+
+    <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl my-2 border border-gray-100 dark:border-gray-700 space-y-2">
+      <div class="flex gap-2">
+        <input type="text" id="cartPromoInput" placeholder="CODE PROMO" class="w-full text-xs p-2 rounded-lg border dark:border-gray-700 dark:bg-gray-900 font-mono font-bold uppercase">
+        <button onclick="applyCartPromo()" class="bg-black dark:bg-white text-white dark:text-black font-bold text-xs px-3 rounded-lg uppercase">OK</button>
+      </div>
+
+      <div class="space-y-1 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs">
+        <div class="flex justify-between text-gray-500">
+          <span>Prix initial:</span>
+          <span id="cart-subtotal">0 FCFA</span>
+        </div>
+        <div id="discount-row" class="flex justify-between text-green-500 font-bold hidden">
+          <span id="discount-label">Réduction:</span>
+          <span id="cart-discount">-0 FCFA</span>
+        </div>
+        <div class="flex justify-between font-black text-sm text-gray-900 dark:text-white pt-1">
+          <span>TOTAL FINAL:</span>
+          <span id="cart-total" class="text-red-600">0 FCFA</span>
+        </div>
+      </div>
+
+      <label class="flex items-center gap-2 cursor-pointer pt-2 border-t border-gray-200 dark:border-gray-700">
         <input type="checkbox" id="deliveryOption" class="w-4 h-4 text-red-600 rounded">
-        <span class="text-xs font-bold text-gray-800">🚚 J'aimerais me faire livrer</span>
+        <span class="text-xs font-bold text-gray-800 dark:text-gray-200">🚚 J'aimerais me faire livrer</span>
       </label>
     </div>
 
-    <button onclick="sendWhatsAppOrder()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl text-xs uppercase flex items-center justify-center gap-2">
+    <button onclick="sendWhatsAppOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-xs uppercase flex items-center justify-center gap-2 shadow">
       <i class="fa-brands fa-whatsapp text-lg"></i> Commander sur WhatsApp
     </button>
   </div>
 
-  <script>
-    let cart = [];
+  <!-- FOOTER ET COMMUNAUTÉ -->
+  <footer class="bg-gray-900 text-white text-center py-8 px-4 border-t border-gray-800 mt-auto">
+    <h4 class="text-xs font-black uppercase tracking-wider mb-1">COMMUNAUTÉ TATAW</h4>
+    <p class="text-[11px] text-gray-400 mb-4">Abonnez-vous pour suivre nos coulisses et drops exclusifs.</p>
+    
+    <div class="flex items-center justify-center gap-6 text-xl mb-6">
+      <a href="https://www.instagram.com" target="_blank" class="hover:text-red-500 transition-colors"><i class="fa-brands fa-instagram"></i></a>
+      <a href="https://www.tiktok.com" target="_blank" class="hover:text-red-500 transition-colors"><i class="fa-brands fa-tiktok"></i></a>
+    </div>
 
-    function closeWelcomeModal() { document.getElementById('welcomeModal').classList.add('hidden'); }
+    <div class="text-[10px] text-gray-500 space-y-1">
+      <p>© 2026 TATAW. Tous droits réservés.</p>
+      <p class="font-bold tracking-widest text-gray-400 uppercase">Powered by offx</p>
+    </div>
+  </footer>
+
+  <script>
+    let cart = JSON.parse(localStorage.getItem('tataw_cart')) || [];
+    let appliedPromo = JSON.parse(localStorage.getItem('tataw_promo')) || null;
+    let isDarkMode = localStorage.getItem('tataw_dark') === 'true';
+
+    if (isDarkMode) document.documentElement.classList.add('dark');
+    updateCartUI();
+
+    function toggleDarkMode() {
+      isDarkMode = !isDarkMode;
+      localStorage.setItem('tataw_dark', isDarkMode);
+      document.documentElement.classList.toggle('dark', isDarkMode);
+    }
+
+    function toggleAiChat() {
+      document.getElementById('aiChatWindow').classList.toggle('hidden');
+    }
+
+    async function sendAiMessage() {
+      const input = document.getElementById('aiInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chatBox = document.getElementById('aiMessages');
+      chatBox.innerHTML += `<div class="bg-black text-white p-2 rounded-xl ml-auto max-w-[80%] text-right">${text}</div>`;
+      input.value = '';
+
+      const res = await fetch('/api/ai-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+
+      let recsHtml = '';
+      if (data.products && data.products.length > 0) {
+        recsHtml = '<div class="grid grid-cols-2 gap-1.5 mt-2">';
+        data.products.forEach(p => {
+          recsHtml += `
+            <div class="bg-white dark:bg-gray-900 border p-1.5 rounded-lg text-center">
+              <img src="${p.image}" class="w-full h-16 object-cover rounded mb-1">
+              <p class="font-bold text-[9px] truncate">${p.name}</p>
+              <p class="text-red-500 font-bold text-[9px]">${p.price} FCFA</p>
+            </div>
+          `;
+        });
+        recsHtml += '</div>';
+      }
+
+      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2">${data.reply}${recsHtml}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
     function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
     function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
     function toggleCart() { document.getElementById('cartSidebar').classList.toggle('translate-x-full'); }
@@ -163,12 +322,12 @@
       const b = document.getElementById('section-bio');
       if (sec === 'articles') {
         p.classList.remove('hidden'); b.classList.add('hidden');
-        document.getElementById('btn-articles').className = "py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all bg-black text-white shadow";
-        document.getElementById('btn-bio').className = "py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all text-gray-600 hover:text-black";
+        document.getElementById('btn-articles').className = "py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all bg-black text-white dark:bg-white dark:text-black shadow";
+        document.getElementById('btn-bio').className = "py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all text-gray-600 dark:text-gray-400 hover:text-black";
       } else {
         p.classList.add('hidden'); b.classList.remove('hidden');
-        document.getElementById('btn-bio').className = "py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all bg-black text-white shadow";
-        document.getElementById('btn-articles').className = "py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all text-gray-600 hover:text-black";
+        document.getElementById('btn-bio').className = "py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all bg-black text-white dark:bg-white dark:text-black shadow";
+        document.getElementById('btn-articles').className = "py-2.5 px-4 rounded-xl text-xs font-black uppercase transition-all text-gray-600 dark:text-gray-400 hover:text-black";
       }
     }
 
@@ -176,33 +335,120 @@
       const optElem = document.getElementById(`option-${id}`);
       const selectedOption = optElem ? optElem.value : null;
       cart.push({ id, name, price, option: selectedOption });
-      document.getElementById('cart-count').innerText = cart.length;
-      renderCart();
-      toggleCart();
+      localStorage.setItem('tataw_cart', JSON.stringify(cart));
+      updateCartUI();
     }
 
-    function renderCart() {
+    function removeFromCart(i) {
+      cart.splice(i, 1);
+      localStorage.setItem('tataw_cart', JSON.stringify(cart));
+      updateCartUI();
+    }
+
+    async function applyCartPromo() {
+      const code = document.getElementById('cartPromoInput').value.trim().toUpperCase();
+      if (!code) return;
+
+      const response = await fetch('/api/check-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      const data = await response.json();
+
+      if (data.valid) {
+        appliedPromo = data;
+        localStorage.setItem('tataw_promo', JSON.stringify(data));
+        alert(`Code ${data.code} activé ! -${data.discount}% accordés.`);
+      } else {
+        alert("Code promo invalide");
+        appliedPromo = null;
+        localStorage.removeItem('tataw_promo');
+      }
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      document.getElementById('cart-count').innerText = cart.length;
       const itemsContainer = document.getElementById('cart-items');
-      itemsContainer.innerHTML = cart.map((item, i) => `
-        <div class="flex justify-between items-center text-xs p-2 bg-gray-50 rounded-lg">
-          <div>
-            <p class="font-bold">${item.name}</p>
-            ${item.option ? `<p class="text-[10px] text-gray-500">Modèle: ${item.option}</p>` : ''}
-            <p class="text-[10px] font-bold text-red-600">${item.price} FCFA</p>
+      let subtotal = 0;
+
+      itemsContainer.innerHTML = cart.map((item, i) => {
+        const numPrice = intVal(item.price);
+        subtotal += numPrice;
+        return `
+          <div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+            <div>
+              <p class="font-bold">${item.name}</p>
+              ${item.option ? `<p class="text-[10px] text-gray-500">Modèle: ${item.option}</p>` : ''}
+              <p class="text-[10px] font-bold text-red-600">${item.price} FCFA</p>
+            </div>
+            <button onclick="removeFromCart(${i})" class="text-gray-400 hover:text-red-600 p-1">✕</button>
           </div>
-          <button onclick="cart.splice(${i},1); renderCart();" class="text-red-500">✕</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+
+      document.getElementById('cart-subtotal').innerText = subtotal.toLocaleString() + " FCFA";
+
+      let finalTotal = subtotal;
+      if (appliedPromo) {
+        const discountAmt = (subtotal * appliedPromo.discount) / 100;
+        finalTotal = subtotal - discountAmt;
+        document.getElementById('discount-row').classList.remove('hidden');
+        document.getElementById('discount-label').innerText = `Réduction (${appliedPromo.code} -${appliedPromo.discount}%):`;
+        document.getElementById('cart-discount').innerText = `- ${discountAmt.toLocaleString()} FCFA`;
+      } else {
+        document.getElementById('discount-row').classList.add('hidden');
+      }
+
+      document.getElementById('cart-total').innerText = finalTotal.toLocaleString() + " FCFA";
+    }
+
+    function intVal(val) {
+      if(!val) return 0;
+      let clean = String(val).replace(/[^0-9]/g, '');
+      return parseInt(clean) || 0;
+    }
+
+    function filterCategory(cat) {
+      const cards = document.querySelectorAll('.product-card');
+      cards.forEach(card => {
+        if (cat === 'ALL' || card.dataset.category.includes(cat)) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    function filterProducts() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      document.querySelectorAll('.product-card').forEach(card => {
+        card.classList.toggle('hidden', !card.dataset.name.includes(q));
+      });
     }
 
     function sendWhatsAppOrder() {
       if (cart.length === 0) return alert("Votre panier est vide !");
       const wantsDelivery = document.getElementById('deliveryOption').checked;
       const deliveryText = wantsDelivery ? "%0A🚚 *Option :* Souhaite une livraison à domicile" : "%0A🏪 *Option :* Retrait en magasin";
+      
+      let subtotal = 0;
       let msg = "Bonjour TATAW Store ! 👋%0AJ'aimerais passer une commande :%0A";
       cart.forEach((item, index) => {
+        subtotal += intVal(item.price);
         msg += `%0A${index + 1}. *${item.name}* ${item.option ? `(${item.option})` : ''} - ${item.price} FCFA`;
       });
+
+      msg += `%0A%0A💵 *Sous-total :* ${subtotal.toLocaleString()} FCFA`;
+
+      if (appliedPromo) {
+        const discountAmt = (subtotal * appliedPromo.discount) / 100;
+        const netTotal = subtotal - discountAmt;
+        msg += `%0A🎁 *Code Promo (${appliedPromo.code}) :* -${appliedPromo.discount}% (-${discountAmt.toLocaleString()} FCFA)`;
+        msg += `%0A🔥 *TOTAL NET À PAYER :* ${netTotal.toLocaleString()} FCFA`;
+      }
+
       msg += `%0A${deliveryText}%0A%0AMerci !`;
       window.open(`https://wa.me/237600000000?text=${msg}`, '_blank');
     }

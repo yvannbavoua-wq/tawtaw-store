@@ -2,49 +2,91 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard Admin - TATAW</title>
+  <title>Dashboard Admin - TATAW x offx</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-white p-6 min-h-screen">
+<body class="bg-gray-950 text-white p-6 min-h-screen font-sans">
   <div class="max-w-4xl mx-auto">
-    <h1 class="text-2xl font-black mb-6 border-b border-gray-800 pb-3">GESTION DU CATALOGUE TATAW</h1>
+    <div class="flex items-center justify-between mb-8 border-b border-gray-800 pb-4">
+      <div>
+        <h1 class="text-xl font-black tracking-wider uppercase text-red-500">ADMINISTRATION TATAW</h1>
+        <p class="text-xs text-gray-500">Gérez le catalogue et les codes promo d'influenceurs</p>
+      </div>
+      <a href="/" class="text-xs bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl uppercase font-bold">Retour Boutique 🛒</a>
+    </div>
 
-    <!-- FORMULAIRE AJOUT PRODUIT -->
-    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-8">
-      <h2 class="text-sm font-bold uppercase mb-4 text-red-500">Ajouter un nouvel article</h2>
+    <!-- PANEL CODES PROMO INFLUENCEURS -->
+    <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 mb-8 shadow-xl">
+      <h2 class="text-xs font-bold uppercase mb-4 text-yellow-500">🔥 Panel Codes Promo & Influenceurs</h2>
+      <form action="/admin/add-promo" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <input type="text" name="code" placeholder="CODE (ex: INFLUENCEUR1)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 uppercase font-mono font-bold">
+        <input type="number" name="discount" placeholder="% Réduction (ex: 15)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 font-bold">
+        <input type="text" name="influencer" placeholder="Nom de l'influenceur (ex: Steve)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+        <button type="submit" class="md:col-span-3 bg-yellow-500 hover:bg-yellow-600 text-black font-black text-xs py-2.5 rounded-xl uppercase">Ajouter ce Code Promo</button>
+      </form>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {% for promo in promos %}
+        <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-800 flex justify-between items-center">
+          <div>
+            <p class="font-mono font-bold text-xs text-yellow-400">{{ promo.code }} (-{{ promo.discount_percent }}%)</p>
+            <p class="text-[10px] text-gray-500">{{ promo.influencer_name if promo.influencer_name else 'Spécial' }}</p>
+          </div>
+          <form action="/admin/delete-promo/{{ promo.id }}" method="POST">
+            <button type="submit" class="text-red-500 text-xs font-bold p-1">✕</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- FORMULAIRE DE CRÉATION DE PRODUIT -->
+    <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 mb-8 shadow-xl">
+      <h2 class="text-xs font-bold uppercase mb-4 text-gray-300">Ajouter un article</h2>
       <form action="/admin/add-product" method="POST" class="space-y-3">
-        <input type="text" name="name" placeholder="Nom de l'article" required class="w-full bg-gray-900 text-xs p-2.5 rounded border border-gray-700">
+        <input type="text" name="name" placeholder="Nom du produit" required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+        <div class="grid grid-cols-2 gap-3">
+          <input type="text" name="category" placeholder="Catégorie (HOMME / FEMME / COSMETIQUES)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+          <input type="text" name="subcategory" placeholder="Sous-catégorie (ex: T-SHIRTS)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+        </div>
+        <input type="text" name="image_url" placeholder="Lien d'image ImgBB (ex: https://i.ibb.co/...)" required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         
-        <div class="grid grid-cols-2 gap-2">
-          <input type="text" name="category" placeholder="Catégorie (ex: HOMME)" required class="bg-gray-900 text-xs p-2.5 rounded border border-gray-700">
-          <input type="text" name="subcategory" placeholder="Sous-catégorie (ex: T-SHIRTS)" required class="bg-gray-900 text-xs p-2.5 rounded border border-gray-700">
+        <div class="grid grid-cols-2 gap-3">
+          <input type="text" name="price" placeholder="Prix (ex: 10000)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+          <input type="text" name="promo_info" placeholder="Info Baisse de prix (ex: -30%)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-yellow-400">
         </div>
 
-        <input type="text" name="image_url" placeholder="URL Directe de l'image (ex: https://i.ibb.co/...)" required class="w-full bg-gray-900 text-xs p-2.5 rounded border border-gray-700">
-        <input type="text" name="price" placeholder="Prix en FCFA" class="w-full bg-gray-900 text-xs p-2.5 rounded border border-gray-700">
+        <input type="text" name="options" placeholder="Modèles/Tailles (ex: Noir, Blanc, Rose OU 39, 40)" class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         
-        <input type="text" name="options" placeholder="Modèles/Tailles/Couleurs (ex: Noir, Blanc, Rose OU 39, 40, 41)" class="w-full bg-gray-900 text-xs p-2.5 rounded border border-gray-700">
-        <textarea name="description" placeholder="Description de l'article..." class="w-full bg-gray-900 text-xs p-2.5 rounded border border-gray-700 h-20"></textarea>
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <label class="flex items-center gap-2 bg-gray-950 p-3 rounded-xl border border-gray-800 cursor-pointer text-xs">
+            <input type="checkbox" name="is_featured" class="w-4 h-4 text-red-600 rounded">
+            <span class="font-bold text-red-400">🔥 Nouveauté Semaine</span>
+          </label>
+          <label class="flex items-center gap-2 bg-gray-950 p-3 rounded-xl border border-gray-800 cursor-pointer text-xs">
+            <input type="checkbox" name="in_stock" checked class="w-4 h-4 text-green-600 rounded">
+            <span class="font-bold text-green-400">✅ En Stock</span>
+          </label>
+        </div>
 
-        <button type="submit" class="w-full bg-red-600 font-bold text-xs py-3 rounded uppercase">Enregistrer l'article</button>
+        <button type="submit" class="w-full bg-red-600 font-bold text-xs py-3.5 rounded-xl uppercase">Enregistrer l'article</button>
       </form>
     </div>
 
     <!-- LISTE DES PRODUITS -->
-    <h2 class="text-sm font-bold uppercase mb-4 text-gray-400">Articles en Base de Données</h2>
+    <h2 class="text-xs font-bold uppercase mb-4 text-gray-400">Catalogue Actuel</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       {% for p in products %}
-      <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex gap-4">
-        <img src="{{ p.image_url }}" class="w-20 h-20 object-cover rounded-lg bg-gray-900">
+      <div class="bg-gray-900 p-4 rounded-2xl border border-gray-800 flex gap-4 items-start">
+        <img src="{{ p.image_url }}" class="w-20 h-20 object-cover rounded-xl bg-gray-950 border border-gray-800">
         <div class="flex-grow text-xs">
-          <h3 class="font-bold text-sm">{{ p.name }}</h3>
-          <p class="text-gray-400 mb-2">{{ p.price }} FCFA</p>
-          <form action="/admin/update-product/{{ p.id }}" method="POST" class="space-y-2">
-            <input type="text" name="image_url" value="{{ p.image_url }}" class="w-full bg-gray-900 p-1.5 rounded border border-gray-700">
-            <input type="text" name="price" value="{{ p.price }}" class="w-full bg-gray-900 p-1.5 rounded border border-gray-700">
-            <input type="text" name="options" value="{{ p.options if p.options else '' }}" placeholder="Options" class="w-full bg-gray-900 p-1.5 rounded border border-gray-700">
-            <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded text-[10px] uppercase font-bold">Mettre à jour</button>
-          </form>
+          <div class="flex justify-between items-start mb-1">
+            <h3 class="font-bold text-sm">{{ p.name }}</h3>
+            <form action="/admin/delete-product/{{ p.id }}" method="POST" onsubmit="return confirm('Supprimer cet article ?')">
+              <button type="submit" class="text-red-500 hover:text-red-400 p-1">✕</button>
+            </form>
+          </div>
+          <p class="text-gray-400 mb-2 font-mono">{{ p.price }} FCFA</p>
         </div>
       </div>
       {% endfor %}
