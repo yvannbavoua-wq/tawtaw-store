@@ -18,53 +18,46 @@ class Product(db.Model):
     image_url = db.Column(db.Text, nullable=False)
     price = db.Column(db.String(50), nullable=True, default="")
 
-# Initialisation de la base de données avec des produits par défaut
+# Initialisation de la base de données sécurisée
 def init_db():
-    db.create_all()
-    if Product.query.count() == 0:
-        default_products = [
-            Product(name="T-Shirt TATAW (Noir, Blanc, Rose, Rouge)", category="homme", subcategory="tshirts", image_url="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80", price="6000"),
-            Product(name="Pull TATAW Noir", category="homme", subcategory="pulls", image_url="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=600&q=80", price="10000"),
-            Product(name="Croptop TATAW (Noir, Blanc, Rose, Rouge)", category="femme", subcategory="croptops", image_url="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80", price="6000"),
-            Product(name="Ensemble TATAW Homme", category="homme", subcategory="ensembles", image_url="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=600&q=80", price=""),
-            Product(name="Babouches TATAW Homme", category="homme", subcategory="babouches", image_url="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=600&q=80", price=""),
-            Product(name="Chaussures TATAW Homme", category="homme", subcategory="chaussures", image_url="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=600&q=80", price=""),
-            Product(name="Chaussettes TATAW Homme", category="homme", subcategory="chaussettes", image_url="https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?auto=format&fit=crop&w=600&q=80", price=""),
-            Product(name="Ensemble TATAW Femme", category="femme", subcategory="ensembles", image_url="https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=600&q=80", price=""),
-            Product(name="Babouches TATAW Femme", category="femme", subcategory="babouches", image_url="https://images.unsplash.com/photo-1560343090-f0409e92791a?auto=format&fit=crop&w=600&q=80", price=""),
-            Product(name="Chaussures TATAW Femme", category="femme", subcategory="chaussures", image_url="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=600&q=80", price=""),
-            Product(name="Chaussettes TATAW Femme", category="femme", subcategory="chaussettes", image_url="https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?auto=format&fit=crop&w=600&q=80", price=""),
-            Product(name="Sac TATAW Femme", category="femme", subcategory="sacs", image_url="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80", price="")
-        ]
-        db.session.bulk_save_objects(default_products)
-        db.session.commit()
+    try:
+        db.create_all()
+        if Product.query.count() == 0:
+            default_products = [
+                Product(name="T-Shirt TATAW (Noir, Blanc, Rose, Rouge)", category="homme", subcategory="tshirts", image_url="https://images.unsplash.com/photo-1521572267360-ee0c2909d518"),
+                Product(name="Pull TATAW Noir", category="homme", subcategory="pulls", image_url="https://images.unsplash.com/photo-1556905055-8f358a7a47b2"),
+                Product(name="Crop-top TATAW (Noir, Blanc, Rose, Rouge)", category="femme", subcategory="croptops", image_url="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c"),
+                Product(name="Ensemble TATAW Homme", category="homme", subcategory="ensembles", image_url="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f"),
+                Product(name="Babouches TATAW Homme", category="homme", subcategory="babouches", image_url="https://images.unsplash.com/photo-1542291026-7eec264c27ff"),
+                Product(name="Chaussures TATAW Homme", category="homme", subcategory="chaussures", image_url="https://images.unsplash.com/photo-1549298916-b41d501d3772"),
+                Product(name="Chaussettes TATAW Homme", category="homme", subcategory="chaussettes", image_url="https://images.unsplash.com/photo-1586350977771-b3b0abd50c82"),
+                Product(name="Ensemble TATAW Femme", category="femme", subcategory="ensembles", image_url="https://images.unsplash.com/photo-1469334031218-e382a71b716b"),
+                Product(name="Babouches TATAW Femme", category="femme", subcategory="babouches", image_url="https://images.unsplash.com/photo-1560343090-f0409e92791a"),
+                Product(name="Chaussures TATAW Femme", category="femme", subcategory="chaussures", image_url="https://images.unsplash.com/photo-1543163521-1bf539c55dd2"),
+                Product(name="Chaussettes TATAW Femme", category="femme", subcategory="chaussettes", image_url="https://images.unsplash.com/photo-1582966772680-860e372bb558"),
+                Product(name="Sac TATAW Femme", category="femme", subcategory="sacs", image_url="https://images.unsplash.com/photo-1584917865442-de89df76afd3")
+            ]
+            db.session.add_all(default_products)
+            db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erreur lors de l'initialisation DB: {e}")
+
+# Appel unique au démarrage de l'application
 with app.app_context():
     init_db()
-    
+
 @app.route('/')
 def index():
     products = Product.query.all()
     return render_template('index.html', products=products)
 
 @app.route('/admin')
-def admin_page():
+def admin():
     products = Product.query.all()
     return render_template('admin.html', products=products)
 
-# API Endpoints
-@app.route('/api/products', methods=['GET'])
-def get_products():
-    products = Product.query.all()
-    return jsonify([{
-        'id': p.id,
-        'name': p.name,
-        'category': p.category,
-        'subcategory': p.subcategory,
-        'image_url': p.image_url,
-        'price': p.price
-    } for p in products])
-
-@app.route('/admin/add-product', methods=['POST'])
+@app.route('/admin/add', methods=['POST'])
 def add_product():
     name = request.form.get('name')
     category = request.form.get('category')
@@ -72,30 +65,20 @@ def add_product():
     image_url = request.form.get('image_url')
     price = request.form.get('price', '')
 
-    new_prod = Product(name=name, category=category, subcategory=subcategory, image_url=image_url, price=price)
-    db.session.add(new_prod)
-    db.session.commit()
-    flash('Produit ajouté avec succès !', 'success')
-    return redirect(url_for('admin_page'))
+    if name and category and subcategory and image_url:
+        new_prod = Product(name=name, category=category, subcategory=subcategory, image_url=image_url, price=price)
+        db.session.add(new_prod)
+        db.session.commit()
+        flash('Produit ajouté avec succès !')
+    return redirect(url_for('admin'))
 
-@app.route('/admin/update-product/<int:id>', methods=['POST'])
-def update_product(id):
-    prod = Product.query.get_or_404(id)
-    prod.price = request.form.get('price', '')
-    prod.image_url = request.form.get('image_url', prod.image_url)
-    db.session.commit()
-    flash('Produit mis à jour !', 'success')
-    return redirect(url_for('admin_page'))
-
-@app.route('/admin/delete-product/<int:id>', methods=['POST'])
+@app.route('/admin/delete/<int:id>')
 def delete_product(id):
-    prod = Product.query.get_or_404(id)
-    db.session.delete(prod)
+    product = Product.query.get_or_404(id)
+    db.session.delete(product)
     db.session.commit()
-    flash('Produit supprimé !', 'info')
-    return redirect(url_for('admin_page'))
+    flash('Produit supprimé !')
+    return redirect(url_for('admin'))
 
 if __name__ == '__main__':
-    with app.app_context():
-        init_db()
     app.run(debug=True)
