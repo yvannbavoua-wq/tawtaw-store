@@ -10,7 +10,7 @@
     <div class="flex items-center justify-between mb-8 border-b border-gray-800 pb-4">
       <div>
         <h1 class="text-xl font-black tracking-wider uppercase text-red-500">ADMINISTRATION TATAW</h1>
-        <p class="text-xs text-gray-500">Gérez le catalogue et les codes promo d'influenceurs</p>
+        <p class="text-xs text-gray-500">Gérez le catalogue, les stocks et les codes promo</p>
       </div>
       <a href="/" class="text-xs bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl uppercase font-bold">Retour Boutique 🛒</a>
     </div>
@@ -51,13 +51,15 @@
         </div>
         <input type="text" name="image_url" placeholder="Lien d'image ImgBB (ex: https://i.ibb.co/...)" required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
           <input type="text" name="price" placeholder="Prix (ex: 10000)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
-          <input type="text" name="promo_info" placeholder="Info Baisse de prix (ex: -30%)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-yellow-400">
+          <input type="text" name="promo_info" placeholder="Info Promo" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-yellow-400">
+          <input type="number" name="stock_qty" placeholder="Quantité Stock (ex: 5)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         </div>
 
         <input type="text" name="options" placeholder="Modèles/Tailles (ex: Noir, Blanc, Rose OU 39, 40)" class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
-        
+        <textarea name="description" placeholder="Description courte du produit..." class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 h-20"></textarea>
+
         <div class="grid grid-cols-2 gap-3 pt-2">
           <label class="flex items-center gap-2 bg-gray-950 p-3 rounded-xl border border-gray-800 cursor-pointer text-xs">
             <input type="checkbox" name="is_featured" class="w-4 h-4 text-red-600 rounded">
@@ -69,11 +71,11 @@
           </label>
         </div>
 
-        <button type="submit" class="w-full bg-red-600 font-bold text-xs py-3.5 rounded-xl uppercase">Enregistrer l'article</button>
+        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 font-bold text-xs py-3.5 rounded-xl uppercase">Enregistrer l'article</button>
       </form>
     </div>
 
-    <!-- LISTE DES PRODUITS -->
+    <!-- LISTE ET MISE À JOUR DES PRODUITS -->
     <h2 class="text-xs font-bold uppercase mb-4 text-gray-400">Catalogue Actuel</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       {% for p in products %}
@@ -86,7 +88,25 @@
               <button type="submit" class="text-red-500 hover:text-red-400 p-1">✕</button>
             </form>
           </div>
-          <p class="text-gray-400 mb-2 font-mono">{{ p.price }} FCFA</p>
+          <p class="text-gray-400 mb-2 font-mono">{{ p.price }} FCFA (Stock: {{ p.stock_qty }})</p>
+          
+          <form action="/admin/update-product/{{ p.id }}" method="POST" class="space-y-2">
+            <div class="grid grid-cols-2 gap-1.5">
+              <input type="text" name="price" value="{{ p.price }}" class="bg-gray-950 p-1.5 rounded-lg border border-gray-800">
+              <input type="number" name="stock_qty" value="{{ p.stock_qty }}" class="bg-gray-950 p-1.5 rounded-lg border border-gray-800">
+            </div>
+            <input type="text" name="promo_info" value="{{ p.promo_info if p.promo_info else '' }}" placeholder="Promo/Baisse prix" class="w-full bg-gray-950 p-1.5 rounded-lg border border-gray-800 text-yellow-400">
+            
+            <div class="flex gap-2">
+              <label class="flex items-center gap-1 text-[10px] text-red-400">
+                <input type="checkbox" name="is_featured" {% if p.is_featured %}checked{% endif %}> Nouveauté
+              </label>
+              <label class="flex items-center gap-1 text-[10px] text-green-400">
+                <input type="checkbox" name="in_stock" {% if p.in_stock %}checked{% endif %}> En Stock
+              </label>
+            </div>
+            <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold">Mettre à jour</button>
+          </form>
         </div>
       </div>
       {% endfor %}

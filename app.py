@@ -1,10 +1,16 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.secret_key = 'tataw_secret_key_change_in_production'
+app.secret_key = os.environ.get('SECRET_KEY', 'tataw_secret_key_change_in_production')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tataw.db'
+# Connexion Supabase / PostgreSQL ou fallback SQLite
+db_url = os.environ.get('DATABASE_URL', 'sqlite:///tataw.db')
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -20,6 +26,8 @@ class Product(db.Model):
     description = db.Column(db.Text, nullable=True)
     is_featured = db.Column(db.Boolean, default=False)
     in_stock = db.Column(db.Boolean, default=True)
+    stock_qty = db.Column(db.Integer, default=5) # NOUVEAU: Stock restant
+    rating = db.Column(db.Float, default=5.0)     # NOUVEAU: Note par étoiles
 
 class PromoCode(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -36,6 +44,22 @@ class User(db.Model):
 
 with app.app_context():
     db.create_all()
+    if not Product.query.first():
+        default_p = Product(
+            name="Tawtaw t-shirt",
+            category="HOMME",
+            subcategory="T-SHIRTS",
+            image_url="https://i.ibb.co/v66HHnLX/IMG-1652.jpg",
+            price="60000",
+            options="Noir, Blanc, Bleu",
+            description="T-shirt officiel TATAW x offx - Édition limitée 2026",
+            is_featured=True,
+            in_stock=True,
+            stock_qty=3,
+            rating=4.9
+        )
+        db.session.add(default_p)
+        db.session.commit()
 
 @app.route('/')
 def index():
@@ -44,12 +68,11 @@ def index():
     user = User.query.get(session.get('user_id')) if session.get('user_id') else None
     return render_template('index.html', products=products, featured_products=featured_products, user=user)
 
-# --- API Assistant IA TATAW ---
+# --- API Assistant IA Styliste ---
 @app.route('/api/ai-assistant', methods=['POST'])
 def ai_assistant():
     data = request.get_json()
     user_msg = data.get('message', '').lower()
-    
     products = Product.query.filter_by(in_stock=True).all()
     recommendations = []
     response_text = "Je suis votre Styliste IA TATAW ! 👋 "
@@ -62,9 +85,10 @@ def ai_assistant():
         matched = [p for p in products if p.category.upper() == 'FEMME']
         recommendations = matched[:3]
         response_text += "Voici nos sélections coup de cœur pour Femme :"
-    elif "soirée" in user_msg or "chic" in user_msg or "style" in user_msg:
-        recommendations = products[:3]
-        response_text += "Pour un look urbain et élégant signé TATAW x offx, je vous recommande ces articles :"
+    elif "cosmétique" in user_msg or "beaute" in user_msg:
+        matched = [p for p in products if p.category.upper() == 'COSMETIQUES']
+        recommendations = matched[:3]
+        response_text += "Voici nos articles cosmétiques :"
     else:
         recommendations = products[:2]
         response_text += "Voici nos pépites du moment disponibles immédiatement :"
@@ -76,10 +100,7 @@ def ai_assistant():
         'image': p.image_url
     } for p in recommendations]
 
-    return jsonify({
-        'reply': response_text,
-        'products': recs_data
-    })
+    return jsonify({'reply': response_text, 'products': recs_data})
 
 # --- API Vérification Code Promo ---
 @app.route('/api/check-promo', methods=['POST'])
@@ -145,6 +166,7 @@ def add_product():
     promo_info = request.form.get('promo_info', '')
     options = request.form.get('options', '')
     description = request.form.get('description', '')
+    stock_qty = request.form.get('stock_qty', type=int) or 5
     is_featured = True if request.form.get('is_featured') else False
     in_stock = True if request.form.get('in_stock') else False
 
@@ -152,7 +174,7 @@ def add_product():
         new_prod = Product(
             name=name, category=category, subcategory=subcategory,
             image_url=image_url, price=price, promo_info=promo_info,
-            options=options, description=description,
+            options=options, description=description, stock_qty=stock_qty,
             is_featured=is_featured, in_stock=in_stock
         )
         db.session.add(new_prod)
@@ -189,6 +211,7 @@ def update_product(id):
     product.promo_info = request.form.get('promo_info', product.promo_info)
     product.options = request.form.get('options', product.options)
     product.description = request.form.get('description', product.description)
+    product.stock_qty = request.form.get('stock_qty', type=int) or product.stock_qty
     product.is_featured = True if request.form.get('is_featured') else False
     product.in_stock = True if request.form.get('in_stock') else False
     db.session.commit()
