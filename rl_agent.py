@@ -1,6 +1,5 @@
 import numpy as np
-from mabwiser.bandit import LinUCB
-
+from mabwiser.linear import LinUCB
 class CommerceRLAgent:
     def __init__(self):
         # Algorithme LinUCB (Contextual Bandit)
