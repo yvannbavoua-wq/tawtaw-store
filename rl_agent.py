@@ -1,21 +1,20 @@
 import numpy as np
-from mabwiser.bandit import LearningPolicy
+from mabwiser.mab import MAB, LearningPolicy
+
 class CommerceRLAgent:
     def __init__(self):
-        # Algorithme LinUCB (Contextual Bandit)
-        self.model = LearningPolicy.LinUCB(alpha=1.0)
         self.is_trained = False
+        self.mab = None
 
     def train_from_history(self, interactions, all_product_ids):
-        """Entraîne l'agent avec l'historique des interactions et récompenses."""
-        if len(interactions) < 3:
-            return False  # Attend d'avoir au moins 3 interactions pour s'entraîner
+        """Entraîne l'agent avec l'historique des interactions."""
+        if len(interactions) < 3 or not all_product_ids:
+            return False
 
         contexts = []
         actions = []
         rewards = []
 
-        # Encodage simple des catégories
         category_map = {'electronique': [1, 0], 'mode': [0, 1], 'autre': [0, 0]}
 
         for inter in interactions:
@@ -25,34 +24,38 @@ class CommerceRLAgent:
             rewards.append(inter.reward)
 
         try:
-            self.model.fit(
-                decisions=np.array(actions),
-                rewards=np.array(rewards),
-                contexts=np.array(contexts)
+            # Initialisation de MAB avec la politique LinUCB
+            self.mab = MAB(
+                arms=all_product_ids,
+                learning_policy=LearningPolicy.LinUCB(alpha=1.0)
+            )
+            self.mab.fit(
+                decisions=actions,
+                rewards=rewards,
+                contexts=contexts
             )
             self.is_trained = True
             return True
         except Exception as e:
-            print("Erreur d'entraînement RL:", e)
+            print("Erreur entraînement RL:", e)
             return False
 
     def recommend(self, user_category, available_products, strategy_mode='standard_sales'):
-        """Recommande le produit optimal selon les choix passés."""
+        """Recommande un produit."""
         if not available_products:
             return None
 
-        category_map = {'electronique': [1, 0], 'mode': [0, 1], 'autre': [0, 0]}
-        ctx_vec = np.array([category_map.get(user_category, [0, 0])])
-
-        # Si l'agent n'a pas encore assez de données, il choisit au hasard
-        if not self.is_trained:
+        if not self.is_trained or self.mab is None:
             return int(np.random.choice(available_products))
+
+        category_map = {'electronique': [1, 0], 'mode': [0, 1], 'autre': [0, 0]}
+        ctx_vec = [category_map.get(user_category, [0, 0])]
 
         try:
-            prediction = self.model.predict(ctx_vec)
+            prediction = self.mab.predict(contexts=ctx_vec)
             return int(prediction[0])
-        except Exception:
+        except Exception as e:
+            print("Erreur prédiction RL:", e)
             return int(np.random.choice(available_products))
 
-# Instance globale de l'agent
 rl_agent = CommerceRLAgent()
