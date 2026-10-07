@@ -1,6 +1,8 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from rl_agent import rl_agent
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'tataw_secret_key_change_in_production')
@@ -41,6 +43,27 @@ class User(db.Model):
     username = db.Column(db.String(80), nullable=False)
     phone = db.Column(db.String(30), unique=True, nullable=False)
     is_verified = db.Column(db.Boolean, default=True)
+class RLInteraction(db.Model):
+    __tablename__ = 'rl_interactions'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(100), nullable=False)
+    context_category = db.Column(db.String(50), nullable=False)
+    action_product_id = db.Column(db.Integer, nullable=False)
+    reward = db.Column(db.Float, default=0.0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class RLModelConfig(db.Model):
+    __tablename__ = 'rl_model_config'
+    id = db.Column(db.Integer, primary_key=True)
+    model_name = db.Column(db.String(50), nullable=False, default='standard_sales')
+    is_active = db.Column(db.Boolean, default=True)
+
+class PollVote(db.Model):
+    __tablename__ = 'poll_votes'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(100), nullable=False)
+    chosen_model = db.Column(db.String(50), nullable=False)
+    voted_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 with app.app_context():
     db.create_all()
@@ -225,6 +248,77 @@ def delete_product(id):
     db.session.commit()
     flash('Produit supprimé !')
     return redirect(url_for('admin'))
+# --- ROUTES RL & SONDAGE ---
+
+# 1. Obtenir une recommandation RL
+@app.route('/api/rl/recommend', methods=['POST'])
+def get_rl_recommendation():
+    data = request.get_json() or {}
+    user_id = data.get('user_id', 'anonymous')
+    category = data.get('category', 'autre')
+    
+    # Récupérer la liste des IDs de tous les produits en stock
+    products = Product.query.filter_by(in_stock=True).all()
+    product_ids = [p.id for p in products]
+
+    if not product_ids:
+        return jsonify({'error': 'Aucun produit disponible'}), 404
+
+    # Récupérer la configuration du modèle actif
+    config = RLModelConfig.query.filter_by(is_active=True).first()
+    active_mode = config.model_name if config else 'standard_sales'
+
+    # Entraîner l'agent avec l'historique
+    history = RLInteraction.query.all()
+    rl_agent.train_from_history(history, product_ids)
+
+    # Obtenir l'ID recommandé
+    chosen_id = rl_agent.recommend(category, product_ids, active_mode)
+
+    # Enregistrer l'interaction
+    interaction = RLInteraction(
+        user_id=user_id,
+        context_category=category,
+        action_product_id=chosen_id,
+        reward=0.0
+    )
+    db.session.add(interaction)
+    db.session.commit()
+
+    return jsonify({
+        'recommended_product_id': chosen_id,
+        'interaction_id': interaction.id,
+        'active_model': active_mode
+    })
+
+# 2. Enregistrer une récompense (clic = +1, achat = +10)
+@app.route('/api/rl/reward', methods=['POST'])
+def set_rl_reward():
+    data = request.get_json() or {}
+    interaction_id = data.get('interaction_id')
+    reward_value = data.get('reward', 1.0)
+
+    interaction = RLInteraction.query.get(interaction_id)
+    if interaction:
+        interaction.reward = float(reward_value)
+        db.session.commit()
+        return jsonify({'status': 'success', 'reward': interaction.reward})
+    return jsonify({'status': 'error', 'message': 'Interaction introuvable'}), 404
+
+# 3. Enregistrer un vote de sondage
+@app.route('/api/poll/vote', methods=['POST'])
+def submit_poll_vote():
+    data = request.get_json() or {}
+    user_id = data.get('user_id', 'anonymous')
+    chosen_model = data.get('chosen_model')
+
+    if not chosen_model:
+        return jsonify({'error': 'Modèle non spécifié'}), 400
+
+    vote = PollVote(user_id=user_id, chosen_model=chosen_model)
+    db.session.add(vote)
+    db.session.commit()
+    return jsonify({'status': 'success', 'message': 'Vote enregistré avec succès'})
 
 if __name__ == '__main__':
     app.run(debug=True)

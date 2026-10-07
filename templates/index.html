@@ -587,5 +587,51 @@
       window.open(`https://wa.me/237653848517?text=${msg}`, '_blank');
     }
   </script>
+  <script>
+// 1. Demander une recommandation à l'IA RL
+async function askAIRecommendation(userId, category) {
+    try {
+        const res = await fetch('/api/rl/recommend', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, category: category })
+        });
+        const data = await res.json();
+        console.log("Recommandation RL reçue :", data);
+        return data; // Contient recommended_product_id et interaction_id
+    } catch (err) {
+        console.error("Erreur RL :", err);
+    }
+}
+
+// 2. Envoyer la récompense quand l'utilisateur clique (+1) ou achète (+10)
+async function sendRLReward(interactionId, rewardValue) {
+    try {
+        await fetch('/api/rl/reward', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ interaction_id: interactionId, reward: rewardValue })
+        });
+        console.log(`Récompense RL de +${rewardValue} envoyée !`);
+    } catch (err) {
+        console.error("Erreur envoi récompense :", err);
+    }
+}
+
+// 3. Envoyer un vote de sondage
+async function submitPollVote(userId, modelChoice) {
+    try {
+        const res = await fetch('/api/poll/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, chosen_model: modelChoice })
+        });
+        const data = await res.json();
+        alert("Vote bien pris en compte !");
+    } catch (err) {
+        console.error("Erreur vote :", err);
+    }
+}
+</script>
 </body>
 </html>
