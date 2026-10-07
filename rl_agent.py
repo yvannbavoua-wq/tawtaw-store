@@ -1,9 +1,9 @@
 import numpy as np
-from mabwiser.linear import LinUCB
+from mabwiser.bandit import LearningPolicy
 class CommerceRLAgent:
     def __init__(self):
         # Algorithme LinUCB (Contextual Bandit)
-        self.model = LinUCB(alpha=1.0)
+        self.model = LearningPolicy.LinUCB(alpha=1.0)
         self.is_trained = False
 
     def train_from_history(self, interactions, all_product_ids):
