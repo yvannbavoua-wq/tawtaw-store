@@ -181,8 +181,7 @@ def admin():
     return render_template('admin.html', products=products, promos=promos)
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
-    def add_product():
-    os.makedirs('static/uploads', exist_ok=True) 
+    os.makedirs('static/uploads', exist_ok=True)
     photos = request.files.getlist('photos')
     first_image_url = ''
     saved_photos = []
@@ -208,16 +207,14 @@ def add_product():
         description=request.form.get('description', ''),
         is_featured=True if request.form.get('is_featured') else False,
         in_stock=True if request.form.get('in_stock') else True,
-        image_url=first_image_url  # Résout l'erreur NotNullViolation
+        image_url=first_image_url
     )
     db.session.add(new_product)
     db.session.commit()
 
-    # Enregistrer toutes les photos dans ProductMedia
     for url in saved_photos:
         db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type='image'))
 
-    # Enregistrement des vidéos multiples
     for video in request.files.getlist('videos'):
         if video and video.filename != '':
             filename = secure_filename(video.filename)
