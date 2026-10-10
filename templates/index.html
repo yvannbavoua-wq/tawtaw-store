@@ -187,7 +187,6 @@
                   </button>
                 {% endfor %}
               </div>
-              <!-- Sélecteur caché pour la compatibilité panier -->
               <select id="option-{{ product.id }}" class="hidden">
                 {% for opt in product.options.split(',') %}
                   <option value="{{ opt.strip() }}">{{ opt.strip() }}</option>
@@ -212,10 +211,8 @@
 
             <!-- ESPACE VIDÉO DÉDIÉ ("VOIR EN VIDÉO") -->
             <div class="mb-3">
-              {% set has_video = false %}
               {% for m in media_list %}
                 {% if m.media_type == 'video' %}
-                  {% set has_video = true %}
                   <div class="mt-2">
                     <p class="text-[10px] font-bold text-red-600 uppercase mb-1">🎬 Voir en vidéo :</p>
                     <video controls class="w-full h-40 object-cover rounded-xl bg-black shadow-inner">
@@ -224,7 +221,7 @@
                     </video>
                   </div>
                 {% endif %}
-              {endfor %}
+              {% endfor %}
             </div>
           {% endif %}
 
@@ -424,7 +421,6 @@
     function toggleCart() { document.getElementById('cartSidebar').classList.toggle('translate-x-full'); }
     function toggleAiChat() { document.getElementById('aiChatWindow').classList.toggle('hidden'); }
 
-    // Changement dynamique de l'image principale au clic sur une couleur/option ou photo galerie
     function switchProductImage(productId, url) {
       const imgElem = document.getElementById(`main-img-${productId}`);
       if (imgElem) {
@@ -432,13 +428,11 @@
       }
     }
 
-    // Gestion du choix de l'option (Couleur/Taille) par pastilles cliquables
     function selectProductOption(productId, optionValue) {
       const selectElem = document.getElementById(`option-${productId}`);
       if (selectElem) {
         selectElem.value = optionValue;
       }
-      // Mettre à jour le style visuel des boutons d'options
       const pills = document.querySelectorAll(`.option-pill-${productId}`);
       pills.forEach(pill => {
         if (pill.innerText.trim() === optionValue) {
