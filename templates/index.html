@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr" id="html-root">
 <head>
-   
     <!-- Balise de vérification Google Search Console -->
     <meta name="google-site-verification" content="QUFjyfbjbZgKdBD1qwn3JpskjSrLmZdv1g9u7fu-Big" />
 
@@ -18,16 +17,15 @@
     <meta property="og:title" content="TATAW - Boutique Officielle">
     <meta property="og:description" content="L'Amour qui ne s'efface jamais. Collection exclusive TATAW.">
     <meta property="og:type" content="website">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TATAW x offx - Store Officiel</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>tailwind.config = { darkMode: 'class' }</script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    @keyframes pulseAlert { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .pulse-urgent { animation: pulseAlert 1.5s infinite; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      @keyframes pulseAlert { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+      .pulse-urgent { animation: pulseAlert 1.5s infinite; }
+    </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans min-h-screen flex flex-col transition-colors duration-300">
 
@@ -133,46 +131,37 @@
     </div>
 
     <!-- Grille des produits -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
       {% for product in products %}
-     <div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
-    <div class="relative pt-[100%] bg-gray-100 dark:bg-gray-800">
-        <!-- Affichage des médias (images / vidéos) -->
-        {% if product.media %}
-            {% for item in product.media %}
-                {% if loop.first %}
-                    {% if item.media_type == 'image' %}
-                        <img src="{{ item.file_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover">
-                    {% elif item.media_type == 'video' %}
-                        <video controls class="absolute inset-0 w-full h-full object-cover">
-                            <source src="{{ item.file_url }}" type="video/mp4">
-                        </video>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-        {% else %}
-            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover">
-        {% endif %}
+      <div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col" data-category="{{ product.category|upper }}" data-name="{{ product.name|lower }}">
+        
+        <!-- VISUEL PRINCIPAL & GALERIE -->
+        <div class="relative pt-[100%] bg-gray-100 dark:bg-gray-800">
+          <img id="main-img-{{ product.id }}" src="{{ product.image_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300">
 
-        <!-- Badges Promo / Stock -->
-        {% if product.promo_info %}
-            <span class="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">{{ product.promo_info }}</span>
-        {% endif %}
+          <!-- Badges Promo / Stock -->
+          {% if product.promo_info %}
+              <span class="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase z-10">{{ product.promo_info }}</span>
+          {% endif %}
 
-        {% if not product.in_stock %}
-            <span class="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">En Rupture</span>
-        {% else %}
-            <span class="absolute bottom-2 left-2 bg-green-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">En Stock</span>
-        {% endif %}
-    </div>
+          {% if not product.in_stock %}
+              <span class="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase z-10">En Rupture</span>
+          {% else %}
+              <span class="absolute bottom-2 left-2 bg-green-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase z-10">En Stock</span>
+          {% endif %}
+        </div>
 
-    <div class="p-3 flex flex-col flex-grow">
-        <p class="text-[9px] font-bold uppercase text-red-600 mb-1">{{ product.category }} • {{ product.subcategory }}</p>
-        <h3 class="text-xs font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">{{ product.name }}</h3>
+        <div class="p-4 flex flex-col flex-grow">
+          <p class="text-[10px] font-bold uppercase text-red-600 mb-1">{{ product.category }} • {{ product.subcategory }}</p>
+          <h3 class="text-sm font-black text-gray-900 dark:text-white mb-1">{{ product.name }}</h3>
 
+          <!-- Description visible -->
+          {% if product.description %}
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{{ product.description }}</p>
+          {% endif %}
 
-          <!-- NOUVEAU: Notation Étoiles (Rating) -->
-          <div class="flex items-center gap-1 text-yellow-400 text-[10px] mb-1.5">
+          <!-- Notation Étoiles -->
+          <div class="flex items-center gap-1 text-yellow-400 text-[10px] mb-2">
             <i class="fa-solid fa-star"></i>
             <i class="fa-solid fa-star"></i>
             <i class="fa-solid fa-star"></i>
@@ -181,30 +170,76 @@
             <span class="text-gray-400 text-[9px] font-bold ml-1">({{ product.rating }})</span>
           </div>
 
-          <!-- NOUVEAU: Compteur de Stock Restant d'Urgence -->
+          <!-- Alerte Stock Restant -->
           {% if product.in_stock and product.stock_qty <= 5 %}
-            <p class="text-[9px] font-bold text-red-500 pulse-urgent mb-2">🔥 Plus que {{ product.stock_qty }} pièces en stock !</p>
+            <p class="text-[10px] font-bold text-red-500 pulse-urgent mb-2">🔥 Plus que {{ product.stock_qty }} pièces en stock !</p>
           {% endif %}
 
+          <!-- OPTIONS & SÉLECTION DE COULEURS / TAILLES -->
           {% if product.options %}
-            <select id="option-{{ product.id }}" class="w-full text-[10px] p-1.5 border rounded mb-2 bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-700 font-medium outline-none">
-              {% for opt in product.options.split(',') %}
-                <option value="{{ opt.strip() }}">{{ opt.strip() }}</option>
-              {% endfor %}
-            </select>
+            <div class="mb-3">
+              <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Options (Couleur / Taille) :</label>
+              <div class="flex flex-wrap gap-1.5 mb-2">
+                {% for opt in product.options.split(',') %}
+                  {% set opt_clean = opt.strip() %}
+                  <button type="button" onclick="selectProductOption('{{ product.id }}', '{{ opt_clean }}')" class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg border border-gray-300 dark:border-gray-700 hover:border-black dark:hover:border-white transition {% if loop.first %}bg-black text-white dark:bg-white dark:text-black border-transparent{% endif %}">
+                    {{ opt_clean }}
+                  </button>
+                {% endfor %}
+              </div>
+              <!-- Sélecteur caché pour la compatibilité panier -->
+              <select id="option-{{ product.id }}" class="hidden">
+                {% for opt in product.options.split(',') %}
+                  <option value="{{ opt.strip() }}">{{ opt.strip() }}</option>
+                {% endfor %}
+              </select>
+            </div>
           {% endif %}
 
-          <div class="mt-auto pt-2 border-t border-gray-100 dark:border-gray-800 space-y-2">
+          <!-- GALERIE MÉDIA SECONDAIRE (PHOTOS ET VIDÉOS SUPPLÉMENTAIRES) -->
+          {% set media_list = product.media if product.media is defined else [] %}
+          {% if media_list %}
+            <div class="mb-3">
+              <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Photos & Vidéos :</p>
+              <div class="flex gap-2 overflow-x-auto pb-1">
+                {% for m in media_list %}
+                  {% if m.media_type == 'image' %}
+                    <img src="{{ m.file_url }}" onclick="switchProductImage('{{ product.id }}', '{{ m.file_url }}')" class="w-12 h-12 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-red-600 transition shrink-0">
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- ESPACE VIDÉO DÉDIÉ ("VOIR EN VIDÉO") -->
+            <div class="mb-3">
+              {% set has_video = false %}
+              {% for m in media_list %}
+                {% if m.media_type == 'video' %}
+                  {% set has_video = true %}
+                  <div class="mt-2">
+                    <p class="text-[10px] font-bold text-red-600 uppercase mb-1">🎬 Voir en vidéo :</p>
+                    <video controls class="w-full h-40 object-cover rounded-xl bg-black shadow-inner">
+                      <source src="{{ m.file_url }}" type="video/mp4">
+                      Votre navigateur ne supporte pas la lecture vidéo.
+                    </video>
+                  </div>
+                {% endif %}
+              endfor %}
+            </div>
+          {% endif %}
+
+          <!-- PRIX ET BOUTONS D'ACHAT -->
+          <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-800 space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-black text-gray-900 dark:text-white">{% if product.price %}{{ product.price }}{% else %}Sur demande{% endif %} FCFA</span>
-              <button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price }}')" class="bg-black dark:bg-white text-white dark:text-black p-2 rounded-xl text-xs transition active:scale-95">
-                <i class="fa-solid fa-plus"></i>
+              <span class="text-sm font-black text-gray-900 dark:text-white">{% if product.price %}{{ product.price }}{% else %}Sur demande{% endif %} FCFA</span>
+              <button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price }}')" class="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl text-xs font-bold uppercase transition active:scale-95 flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-cart-plus"></i> Ajouter
               </button>
             </div>
 
-            <!-- NOUVEAU: Bouton d'Achat Rapide 1-Clic -->
-            <button onclick="buyNowOneClick('{{ product.name }}', '{{ product.price }}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black text-[9px] py-1.5 rounded-lg uppercase flex items-center justify-center gap-1 shadow">
-              <i class="fa-brands fa-whatsapp text-xs"></i> Achat Rapide 1-Clic
+            <!-- Bouton d'Achat Rapide WhatsApp 1-Clic -->
+            <button onclick="buyNowOneClick('{{ product.name }}', '{{ product.price }}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black text-[10px] py-2 rounded-xl uppercase flex items-center justify-center gap-1.5 shadow">
+              <i class="fa-brands fa-whatsapp text-sm"></i> Achat Rapide WhatsApp (1-Clic)
             </button>
           </div>
         </div>
@@ -248,7 +283,7 @@
     </div>
   </div>
 
-  <!-- NOUVEAU: Notification Live Simulée de Preuve Sociale (Vente Flash Pop-up) -->
+  <!-- POPUP PREUVE SOCIALE -->
   <div id="liveSalesPopup" class="fixed bottom-6 left-6 z-40 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-3 shadow-2xl flex items-center gap-3 transform translate-y-32 transition-transform duration-500 max-w-xs">
     <div class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-xs shrink-0">🛍️</div>
     <div class="text-[10px]">
@@ -270,26 +305,6 @@
         </div>
       </div>
 
-      <!-- PRÉFÉRENCES (DEVISE & LANGUE) -->
-      <div class="grid grid-cols-2 gap-2 mb-4 bg-gray-100 dark:bg-gray-800 p-3 rounded-xl">
-        <div>
-          <label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Devise</label>
-          <select class="w-full text-xs p-2 rounded-lg bg-white dark:bg-gray-900 border dark:border-gray-700 font-bold">
-            <option value="XAF">FCFA (XAF)</option>
-            <option value="EUR">Euro (€)</option>
-            <option value="USD">USD ($)</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Langue</label>
-          <select class="w-full text-xs p-2 rounded-lg bg-white dark:bg-gray-900 border dark:border-gray-700 font-bold">
-            <option value="FR">Français</option>
-            <option value="EN">English</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- HISTORIQUE DES COMMANDES -->
       <div class="mb-4">
         <h4 class="text-xs font-bold uppercase mb-2 text-gray-500">Historique de vos commandes</h4>
         <div id="orderHistoryList" class="max-h-36 overflow-y-auto space-y-2 text-xs"></div>
@@ -317,7 +332,7 @@
     </div>
   </div>
 
-  <!-- PANIER SIDEBAR COMPLET -->
+  <!-- PANIER SIDEBAR -->
   <div id="cartSidebar" class="fixed inset-y-0 right-0 w-80 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 p-4 flex flex-col">
     <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
       <h3 class="font-black uppercase text-sm">Votre Panier</h3>
@@ -326,7 +341,6 @@
 
     <div id="cart-items" class="flex-grow overflow-y-auto py-3 space-y-2"></div>
 
-    <!-- NOUVEAU: Choix de la ville & Frais de livraison dynamiques -->
     <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl my-2 border border-gray-100 dark:border-gray-700 space-y-2">
       <div>
         <label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Options de Livraison</label>
@@ -338,7 +352,6 @@
         </select>
       </div>
 
-      <!-- CODE PROMO -->
       <div class="flex gap-2 pt-1">
         <input type="text" id="cartPromoInput" placeholder="CODE PROMO" class="w-full text-xs p-2 rounded-lg border dark:border-gray-700 dark:bg-gray-900 font-mono font-bold uppercase text-gray-900 dark:text-white">
         <button onclick="applyCartPromo()" class="bg-black dark:bg-white text-white dark:text-black font-bold text-xs px-3 rounded-lg uppercase">OK</button>
@@ -376,9 +389,10 @@
       <a href="https://www.instagram.com/tataw.999" target="_blank" class="hover:text-red-500 transition-colors"><i class="fa-brands fa-instagram"></i></a>
       <a href="https://www.tiktok.com/@tataw_9990" target="_blank" class="hover:text-red-500 transition-colors"><i class="fa-brands fa-tiktok"></i></a>
     </div>
-    <p class="text-[10px] text-gray-500">© 2026 TATAW. Powered by offx</p>
+    <p class="text-[10px] text-gray-500">©️ 2026 TATAW. Powered by offx</p>
   </footer>
 
+  <!-- SCRIPTS JAVASCRIPT -->
   <script>
     let cart = JSON.parse(localStorage.getItem('tataw_cart')) || [];
     let appliedPromo = JSON.parse(localStorage.getItem('tataw_promo')) || null;
@@ -408,9 +422,31 @@
     function openUserModal() { document.getElementById('userModal').classList.remove('hidden'); }
     function closeUserModal() { document.getElementById('userModal').classList.add('hidden'); }
     function toggleCart() { document.getElementById('cartSidebar').classList.toggle('translate-x-full'); }
+    function toggleAiChat() { document.getElementById('aiChatWindow').classList.toggle('hidden'); }
 
-    function toggleAiChat() {
-      document.getElementById('aiChatWindow').classList.toggle('hidden');
+    // Changement dynamique de l'image principale au clic sur une couleur/option ou photo galerie
+    function switchProductImage(productId, url) {
+      const imgElem = document.getElementById(`main-img-${productId}`);
+      if (imgElem) {
+        imgElem.src = url;
+      }
+    }
+
+    // Gestion du choix de l'option (Couleur/Taille) par pastilles cliquables
+    function selectProductOption(productId, optionValue) {
+      const selectElem = document.getElementById(`option-${productId}`);
+      if (selectElem) {
+        selectElem.value = optionValue;
+      }
+      // Mettre à jour le style visuel des boutons d'options
+      const pills = document.querySelectorAll(`.option-pill-${productId}`);
+      pills.forEach(pill => {
+        if (pill.innerText.trim() === optionValue) {
+          pill.className = `option-pill-${productId} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg bg-black text-white dark:bg-white dark:text-black border-transparent transition`;
+        } else {
+          pill.className = `option-pill-${productId} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg border border-gray-300 dark:border-gray-700 hover:border-black dark:hover:border-white transition`;
+        }
+      });
     }
 
     async function sendAiMessage() {
@@ -513,7 +549,7 @@
           <div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl">
             <div>
               <p class="font-bold">${item.name}</p>
-              ${item.option ? `<p class="text-[10px] text-gray-500">Modèle: ${item.option}</p>` : ''}
+              ${item.option ? `<p class="text-[10px] text-gray-500">Option: ${item.option}</p>` : ''}
               <p class="text-[10px] font-bold text-red-600">${item.price} FCFA</p>
             </div>
             <button onclick="removeFromCart(${i})" class="text-red-500 font-bold p-1">✕</button>
@@ -621,51 +657,5 @@
       window.open(`https://wa.me/237653848517?text=${msg}`, '_blank');
     }
   </script>
-  <script>
-// 1. Demander une recommandation à l'IA RL
-async function askAIRecommendation(userId, category) {
-    try {
-        const res = await fetch('/api/rl/recommend', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId, category: category })
-        });
-        const data = await res.json();
-        console.log("Recommandation RL reçue :", data);
-        return data; // Contient recommended_product_id et interaction_id
-    } catch (err) {
-        console.error("Erreur RL :", err);
-    }
-}
-
-// 2. Envoyer la récompense quand l'utilisateur clique (+1) ou achète (+10)
-async function sendRLReward(interactionId, rewardValue) {
-    try {
-        await fetch('/api/rl/reward', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ interaction_id: interactionId, reward: rewardValue })
-        });
-        console.log(`Récompense RL de +${rewardValue} envoyée !`);
-    } catch (err) {
-        console.error("Erreur envoi récompense :", err);
-    }
-}
-
-// 3. Envoyer un vote de sondage
-async function submitPollVote(userId, modelChoice) {
-    try {
-        const res = await fetch('/api/poll/vote', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId, chosen_model: modelChoice })
-        });
-        const data = await res.json();
-        alert("Vote bien pris en compte !");
-    } catch (err) {
-        console.error("Erreur vote :", err);
-    }
-}
-</script>
 </body>
 </html>
