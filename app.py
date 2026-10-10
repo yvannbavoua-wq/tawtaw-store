@@ -4,6 +4,7 @@ from flask import Flask, flash, jsonify, redirect, render_template, request, ses
 from flask_sqlalchemy import SQLAlchemy
 from rl_agent import rl_agent
 from werkzeug.utils import secure_filename
+from google import genai
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'tataw_secret_key_change_in_production')
@@ -103,62 +104,70 @@ def index():
     featured_products = Product.query.filter_by(is_featured=True).all()
     user = User.query.get(session.get('user_id')) if session.get('user_id') else None
     return render_template('index.html', products=products, featured_products=featured_products, user=user)
+# Initialisation du client Gemini API
+client = genai.Client()
 
-let recognition = null;
-let isRecording = false;
+@app.route('/api/ai-assistant', methods=['POST'])
+def ai_assistant():
+    data = request.get_json() or {}
+    user_msg = data.get('message', '').strip()
 
-function toggleVoiceRecognition() {
-  // Vérifier si le navigateur supporte la reconnaissance vocale
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  
-  if (!SpeechRecognition) {
-    alert("La reconnaissance vocale n'est pas supportée par votre navigateur. Utilisez Chrome ou Safari.");
-    return;
-  }
+    if not user_msg:
+        return jsonify({'reply': 'Bonjour ! Comment puis-je vous aider aujourd’hui ?', 'products': []})
 
-  if (!recognition) {
-    recognition = new SpeechRecognition();
-    recognition.lang = 'fr-FR'; // Langue française
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    all_products = Product.query.filter_by(in_stock=True).all()
+    catalog_info = "\n".join([
+        f"- [ID: {p.id}] {p.name} | Catégorie: {p.category} | Sous-catégorie: {p.subcategory} | Prix: {p.price} FCFA | Options: {p.options or 'Standard'} | Description: {p.description or 'Streetwear premium'}"
+        for p in all_products
+    ])
 
-    recognition.onstart = function() {
-      isRecording = true;
-      document.getElementById('micIcon').className = "fa-solid fa-microphone-slash text-red-600 animate-pulse";
-      showToast("Écoute en cours... Parlez à l'IA 🎙️");
-    };
+    system_prompt = f"""
+    Tu es le Styliste IA officiel et conseiller de mode personnel pour la marque de streetwear premium TATAW (fondée à Yaoundé).
+    Sois 100% humain, chaleureux, naturel et dynamique. Adapte-toi au ton du client.
+    Ne balance pas directement les produits si le client dit juste bonjour. Réponds-lui naturellement d'abord.
+    Analyse son style (streetwear, habillé, casual, etc.) et ses préférences.
+    
+    CATALOGUE ACTUELLEMENT DISPONIBLE :
+    {catalog_info}
 
-    recognition.onresult = function(event) {
-      const speechToText = event.results[0][0].transcript;
-      document.getElementById('aiInput').value = speechToText;
-      // Envoyer automatiquement le message après la dictée vocale
-      sendAiMessage();
-    };
+    À la fin de ta réponse texte, si tu recommandes des produits, indique leurs IDs sous la forme [RECOMMEND: id1, id2].
+    """
 
-    recognition.onerror = function(event) {
-      console.error("Erreur vocale :", event.error);
-      stopRecordingStyle();
-    };
+    try:
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=f"{system_prompt}\n\nClient: {user_msg}\nStyliste TATAW:"
+        )
+        full_reply = response.text
 
-    recognition.onend = function() {
-      stopRecordingStyle();
-    };
-  }
+        recommended_products = []
+        if "[RECOMMEND:" in full_reply:
+            parts = full_reply.split("[RECOMMEND:")
+            reply_text = parts[0].strip()
+            ids_str = parts[1].replace("]", "").strip()
+            product_ids = [int(i.strip()) for i in ids_str.split(",") if i.strip().isdigit()]
+            for p in all_products:
+                if p.id in product_ids:
+                    recommended_products.append({
+                        'id': p.id,
+                        'name': p.name,
+                        'price': p.price or 'Sur demande',
+                        'image': p.image_url
+                    })
+        else:
+            reply_text = full_reply.strip()
 
-  if (isRecording) {
-    recognition.stop();
-  } else {
-    recognition.start();
-  }
-}
+        return jsonify({
+            'reply': reply_text,
+            'products': recommended_products
+        })
 
-function stopRecordingStyle() {
-  isRecording = false;
-  const micIcon = document.getElementById('micIcon');
-  if (micIcon) {
-    micIcon.className = "fa-solid fa-microphone";
-  }
-}
+    except Exception as e:
+        print(f"Erreur Styliste IA: {e}")
+        return jsonify({
+            'reply': "Ravi de vous accueillir chez TATAW ! Que recherchez-vous comme style aujourd'hui ?",
+            'products': []
+        })
 @app.route('/api/check-promo', methods=['POST'])
 def check_promo():
     data = request.get_json() or {}

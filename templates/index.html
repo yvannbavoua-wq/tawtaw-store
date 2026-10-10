@@ -663,6 +663,60 @@
       renderOrderHistory();
 
       window.open(`https://wa.me/237653848517?text=${msg}`, '_blank');
+      let recognition = null;
+let isRecording = false;
+
+function toggleVoiceRecognition() {
+  // Vérifier si le navigateur supporte la reconnaissance vocale
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    alert("La reconnaissance vocale n'est pas supportée par votre navigateur. Utilisez Chrome ou Safari.");
+    return;
+  }
+
+  if (!recognition) {
+    recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR'; // Langue française
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = function() {
+      isRecording = true;
+      document.getElementById('micIcon').className = "fa-solid fa-microphone-slash text-red-600 animate-pulse";
+      showToast("Écoute en cours... Parlez à l'IA 🎙️");
+    };
+
+    recognition.onresult = function(event) {
+      const speechToText = event.results[0][0].transcript;
+      document.getElementById('aiInput').value = speechToText;
+      // Envoyer automatiquement le message après la dictée vocale
+      sendAiMessage();
+    };
+
+    recognition.onerror = function(event) {
+      console.error("Erreur vocale :", event.error);
+      stopRecordingStyle();
+    };
+
+    recognition.onend = function() {
+      stopRecordingStyle();
+    };
+  }
+
+  if (isRecording) {
+    recognition.stop();
+  } else {
+    recognition.start();
+  }
+}
+
+function stopRecordingStyle() {
+  isRecording = false;
+  const micIcon = document.getElementById('micIcon');
+  if (micIcon) {
+    micIcon.className = "fa-solid fa-microphone";
+  }
     }
   </script>
 </body>
