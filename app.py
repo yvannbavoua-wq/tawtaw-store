@@ -181,7 +181,8 @@ def admin():
     return render_template('admin.html', products=products, promos=promos)
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
-    # Traiter les photos et récupérer la première pour image_url
+    def add_product():
+    os.makedirs('static/uploads', exist_ok=True) 
     photos = request.files.getlist('photos')
     first_image_url = ''
     saved_photos = []
