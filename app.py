@@ -179,6 +179,12 @@ def admin():
     products = Product.query.all()
     promos = PromoCode.query.all()
     return render_template('admin.html', products=products, promos=promos)
+class ProductMedia(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    file_url = db.Column(db.String(255), nullable=False)
+    media_type = db.Column(db.String(50), nullable=False)  # 'image' ou 'video'
+
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
     os.makedirs('static/uploads', exist_ok=True)
