@@ -176,13 +176,17 @@
           {% endif %}
 
           <!-- OPTIONS & SÉLECTION DE COULEURS / TAILLES -->
+          {% set media_list = product.media if product.media is defined else [] %}
           {% if product.options %}
             <div class="mb-3">
               <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Options (Couleur / Taille) :</label>
               <div class="flex flex-wrap gap-1.5 mb-2">
                 {% for opt in product.options.split(',') %}
                   {% set opt_clean = opt.strip() %}
-                  <button type="button" onclick="selectProductOption('{{ product.id }}', '{{ opt_clean }}')" class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg border border-gray-300 dark:border-gray-700 hover:border-black dark:hover:border-white transition {% if loop.first %}bg-black text-white dark:bg-white dark:text-black border-transparent{% endif %}">
+                  {% set opt_media = media_list[loop.index0] if media_list and loop.index0 < media_list|length else None %}
+                  <button type="button" 
+                          onclick="selectProductOption('{{ product.id }}', '{{ opt_clean }}'{% if opt_media %}, '{{ opt_media.file_url }}'{% endif %})" 
+                          class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg border border-gray-300 dark:border-gray-700 hover:border-black dark:hover:border-white transition {% if loop.first %}bg-black text-white dark:bg-white dark:text-black border-transparent{% endif %}">
                     {{ opt_clean }}
                   </button>
                 {% endfor %}
@@ -196,7 +200,6 @@
           {% endif %}
 
           <!-- GALERIE MÉDIA SECONDAIRE (PHOTOS ET VIDÉOS SUPPLÉMENTAIRES) -->
-          {% set media_list = product.media if product.media is defined else [] %}
           {% if media_list %}
             <div class="mb-3">
               <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Photos & Vidéos :</p>
@@ -428,17 +431,21 @@
       }
     }
 
-    function selectProductOption(productId, optionValue) {
+    function selectProductOption(productId, optionValue, imageUrl) {
       const selectElem = document.getElementById(`option-${productId}`);
-      if (selectElem) {
-        selectElem.value = optionValue;
+      if (selectElem) selectElem.value = optionValue;
+
+      if (imageUrl) {
+        const mainImg = document.getElementById(`main-img-${productId}`);
+        if (mainImg) mainImg.src = imageUrl;
       }
+
       const pills = document.querySelectorAll(`.option-pill-${productId}`);
       pills.forEach(pill => {
         if (pill.innerText.trim() === optionValue) {
-          pill.className = `option-pill-${productId} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg bg-black text-white dark:bg-white dark:text-black border-transparent transition`;
+          pill.className = `option-pill-${productId} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg bg-black text-white dark:bg-white dark:text-black transition`;
         } else {
-          pill.className = `option-pill-${productId} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg border border-gray-300 dark:border-gray-700 hover:border-black dark:hover:border-white transition`;
+          pill.className = `option-pill-${productId} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg border border-gray-300 dark:border-gray-700 transition`;
         }
       });
     }

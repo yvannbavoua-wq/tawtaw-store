@@ -278,10 +278,13 @@ def update_product(id):
 @app.route('/admin/delete-product/<int:id>', methods=['POST'])
 def delete_product(id):
     product = Product.query.get_or_404(id)
+    # 1. Supprimer d'abord tous les médias liés à ce produit
+    ProductMedia.query.filter_by(product_id=id).delete()
+    # 2. Supprimer ensuite le produit
     db.session.delete(product)
     db.session.commit()
-    flash('Produit supprimé !')
-    return redirect(url_for('admin'))
+    flash('Produit supprimé avec succès !')
+    return redirect(url_for('admin')) 
 
 # --- ROUTES RL & SONDAGE ---
 
