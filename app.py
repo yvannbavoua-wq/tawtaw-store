@@ -181,12 +181,19 @@ def admin():
 
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
-    new_product = Product(
+          new_product = Product(
         name=request.form['name'],
+        category=request.form.get('category'),
+        subcategory=request.form.get('subcategory'),
         price=request.form['price'],
-        description=request.form.get('description', '')
-    )
-    db.session.add(new_product)
+        promo_info=request.form.get('promo_info', ''),
+        stock_qty=request.form.get('stock_qty', 0),
+        options=request.form.get('options', ''),
+        description=request.form.get('description', ''),
+        is_featured=True if request.form.get('is_featured') else False,
+        in_stock=True if request.form.get('in_stock') else True
+          )
+      db.session.add(new_product)
     db.session.commit()
 
     # Enregistrement des photos multiples
@@ -324,4 +331,7 @@ def submit_poll_vote():
     return jsonify({'status': 'success', 'message': 'Vote enregistré avec succès'})
 
 if __name__ == '__main__':
+     with app.app_context():
+            db.create_all()
     app.run(debug=True)
+   
