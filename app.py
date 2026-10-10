@@ -380,6 +380,30 @@ def submit_poll_vote():
     db.session.add(vote)
     db.session.commit()
     return jsonify({'status': 'success', 'message': 'Vote enregistré avec succès'})
+import os
+from werkzeug.utils import secure_filename
+
+@app.route('/admin/edit-product/<int:id>', methods=['POST'])
+def edit_product(id):
+    product = Product.query.get_or_404(id)
+    
+    product.name = request.form.get('name', product.name)
+    product.price = request.form.get('price', product.price)
+    product.stock_qty = int(request.form.get('stock_qty', product.stock_qty))
+    
+    # Gestion du changement d'image
+    image_file = request.files.get('image_file')
+    if image_file and image_file.filename != '':
+        filename = secure_filename(image_file.filename)
+        upload_folder = 'static/uploads'
+        os.makedirs(upload_folder, exist_ok=True)
+        filepath = os.path.join(upload_folder, filename)
+        image_file.save(filepath)
+        product.image_url = f"/{filepath}"
+
+    db.session.commit()
+    flash('Article modifié avec succès !')
+    return redirect(url_for('admin'))
 
 if __name__ == '__main__':
     app.run(debug=True)
