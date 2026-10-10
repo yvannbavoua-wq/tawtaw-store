@@ -180,6 +180,21 @@ def admin():
     return render_template('admin.html', products=products, promos=promos)
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
+    # Traiter les photos et récupérer la première pour image_url
+    photos = request.files.getlist('photos')
+    first_image_url = ''
+    saved_photos = []
+    
+    for photo in photos:
+        if photo and photo.filename != '':
+            filename = secure_filename(photo.filename)
+            filepath = os.path.join('static/uploads', filename)
+            photo.save(filepath)
+            url = f'/static/uploads/{filename}'
+            if not first_image_url:
+                first_image_url = url
+            saved_photos.append(url)
+
     new_product = Product(
         name=request.form['name'],
         category=request.form.get('category'),
@@ -190,18 +205,15 @@ def add_product():
         options=request.form.get('options', ''),
         description=request.form.get('description', ''),
         is_featured=True if request.form.get('is_featured') else False,
-        in_stock=True if request.form.get('in_stock') else True
+        in_stock=True if request.form.get('in_stock') else True,
+        image_url=first_image_url  # Résout l'erreur NotNullViolation
     )
     db.session.add(new_product)
     db.session.commit()
 
-    # Enregistrement des photos multiples
-    for photo in request.files.getlist('photos'):
-        if photo and photo.filename != '':
-            filename = secure_filename(photo.filename)
-            filepath = os.path.join('static/uploads', filename)
-            photo.save(filepath)
-            db.session.add(ProductMedia(product_id=new_product.id, file_url=f'/static/uploads/{filename}', media_type='image'))
+    # Enregistrer toutes les photos dans ProductMedia
+    for url in saved_photos:
+        db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type='image'))
 
     # Enregistrement des vidéos multiples
     for video in request.files.getlist('videos'):
@@ -334,3 +346,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+s
