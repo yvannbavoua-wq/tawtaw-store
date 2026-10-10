@@ -1,7 +1,7 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
+from flask_sqlalchemy import SQLAlchemy
 from rl_agent import rl_agent
 from werkzeug.utils import secure_filename
 
@@ -17,6 +17,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+# --- MODÈLES DE LA BASE DE DONNÉES ---
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -29,8 +31,14 @@ class Product(db.Model):
     description = db.Column(db.Text, nullable=True)
     is_featured = db.Column(db.Boolean, default=False)
     in_stock = db.Column(db.Boolean, default=True)
-    stock_qty = db.Column(db.Integer, default=5) # NOUVEAU: Stock restant
-    rating = db.Column(db.Float, default=5.0)     # NOUVEAU: Note par étoiles
+    stock_qty = db.Column(db.Integer, default=5)
+    rating = db.Column(db.Float, default=5.0)
+
+class ProductMedia(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    file_url = db.Column(db.String(255), nullable=False)
+    media_type = db.Column(db.String(50), nullable=False)  # 'image' ou 'video'
 
 class PromoCode(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -44,6 +52,7 @@ class User(db.Model):
     username = db.Column(db.String(80), nullable=False)
     phone = db.Column(db.String(30), unique=True, nullable=False)
     is_verified = db.Column(db.Boolean, default=True)
+
 class RLInteraction(db.Model):
     __tablename__ = 'rl_interactions'
     id = db.Column(db.Integer, primary_key=True)
@@ -66,6 +75,7 @@ class PollVote(db.Model):
     chosen_model = db.Column(db.String(50), nullable=False)
     voted_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+# Initialisation automatique de toutes les tables après la déclaration des modèles
 with app.app_context():
     db.create_all()
     if not Product.query.first():
@@ -85,6 +95,8 @@ with app.app_context():
         db.session.add(default_p)
         db.session.commit()
 
+# --- ROUTES SITE & USER ---
+
 @app.route('/')
 def index():
     products = Product.query.all()
@@ -92,10 +104,9 @@ def index():
     user = User.query.get(session.get('user_id')) if session.get('user_id') else None
     return render_template('index.html', products=products, featured_products=featured_products, user=user)
 
-# --- API Assistant IA Styliste ---
 @app.route('/api/ai-assistant', methods=['POST'])
 def ai_assistant():
-    data = request.get_json()
+    data = request.get_json() or {}
     user_msg = data.get('message', '').lower()
     products = Product.query.filter_by(in_stock=True).all()
     recommendations = []
@@ -126,10 +137,9 @@ def ai_assistant():
 
     return jsonify({'reply': response_text, 'products': recs_data})
 
-# --- API Vérification Code Promo ---
 @app.route('/api/check-promo', methods=['POST'])
 def check_promo():
-    data = request.get_json()
+    data = request.get_json() or {}
     code_input = data.get('code', '').strip().upper()
     promo = PromoCode.query.filter_by(code=code_input, is_active=True).first()
     
@@ -173,17 +183,13 @@ def logout():
     flash("Vous êtes déconnecté.")
     return redirect(url_for('index'))
 
-# --- Administration ---
+# --- ADMINISTRATION ---
+
 @app.route('/admin')
 def admin():
     products = Product.query.all()
     promos = PromoCode.query.all()
     return render_template('admin.html', products=products, promos=promos)
-class ProductMedia(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    file_url = db.Column(db.String(255), nullable=False)
-    media_type = db.Column(db.String(50), nullable=False)  # 'image' ou 'video'
 
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
@@ -222,7 +228,7 @@ def add_product():
     for url in saved_photos:
         db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type='image'))
 
-       # Enregistrement des vidéos multiples
+    # Enregistrement des vidéos multiples
     for video in request.files.getlist('videos'):
         if video and video.filename != '':
             filename = secure_filename(video.filename)
@@ -232,7 +238,6 @@ def add_product():
 
     db.session.commit()
     return redirect('/admin')
-
 
 @app.route('/admin/add-promo', methods=['POST'])
 def add_promo():
@@ -277,34 +282,29 @@ def delete_product(id):
     db.session.commit()
     flash('Produit supprimé !')
     return redirect(url_for('admin'))
+
 # --- ROUTES RL & SONDAGE ---
 
-# 1. Obtenir une recommandation RL
 @app.route('/api/rl/recommend', methods=['POST'])
 def get_rl_recommendation():
     data = request.get_json() or {}
     user_id = data.get('user_id', 'anonymous')
     category = data.get('category', 'autre')
     
-    # Récupérer la liste des IDs de tous les produits en stock
     products = Product.query.filter_by(in_stock=True).all()
     product_ids = [p.id for p in products]
 
     if not product_ids:
         return jsonify({'error': 'Aucun produit disponible'}), 404
 
-    # Récupérer la configuration du modèle actif
     config = RLModelConfig.query.filter_by(is_active=True).first()
     active_mode = config.model_name if config else 'standard_sales'
 
-    # Entraîner l'agent avec l'historique
     history = RLInteraction.query.all()
     rl_agent.train_from_history(history, product_ids)
 
-    # Obtenir l'ID recommandé
     chosen_id = rl_agent.recommend(category, product_ids, active_mode)
 
-    # Enregistrer l'interaction
     interaction = RLInteraction(
         user_id=user_id,
         context_category=category,
@@ -320,7 +320,6 @@ def get_rl_recommendation():
         'active_model': active_mode
     })
 
-# 2. Enregistrer une récompense (clic = +1, achat = +10)
 @app.route('/api/rl/reward', methods=['POST'])
 def set_rl_reward():
     data = request.get_json() or {}
@@ -334,7 +333,6 @@ def set_rl_reward():
         return jsonify({'status': 'success', 'reward': interaction.reward})
     return jsonify({'status': 'error', 'message': 'Interaction introuvable'}), 404
 
-# 3. Enregistrer un vote de sondage
 @app.route('/api/poll/vote', methods=['POST'])
 def submit_poll_vote():
     data = request.get_json() or {}
@@ -350,6 +348,4 @@ def submit_poll_vote():
     return jsonify({'status': 'success', 'message': 'Vote enregistré avec succès'})
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
