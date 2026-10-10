@@ -104,39 +104,61 @@ def index():
     user = User.query.get(session.get('user_id')) if session.get('user_id') else None
     return render_template('index.html', products=products, featured_products=featured_products, user=user)
 
-@app.route('/api/ai-assistant', methods=['POST'])
-def ai_assistant():
-    data = request.get_json() or {}
-    user_msg = data.get('message', '').lower()
-    products = Product.query.filter_by(in_stock=True).all()
-    recommendations = []
-    response_text = "Je suis votre Styliste IA TATAW ! 👋 "
+let recognition = null;
+let isRecording = false;
 
-    if "homme" in user_msg or "garçon" in user_msg:
-        matched = [p for p in products if p.category.upper() == 'HOMME']
-        recommendations = matched[:3]
-        response_text += "Voici les meilleures pièces pour Homme de notre collection actuelle :"
-    elif "femme" in user_msg or "fille" in user_msg:
-        matched = [p for p in products if p.category.upper() == 'FEMME']
-        recommendations = matched[:3]
-        response_text += "Voici nos sélections coup de cœur pour Femme :"
-    elif "cosmétique" in user_msg or "beaute" in user_msg:
-        matched = [p for p in products if p.category.upper() == 'COSMETIQUES']
-        recommendations = matched[:3]
-        response_text += "Voici nos articles cosmétiques :"
-    else:
-        recommendations = products[:2]
-        response_text += "Voici nos pépites du moment disponibles immédiatement :"
+function toggleVoiceRecognition() {
+  // Vérifier si le navigateur supporte la reconnaissance vocale
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    alert("La reconnaissance vocale n'est pas supportée par votre navigateur. Utilisez Chrome ou Safari.");
+    return;
+  }
 
-    recs_data = [{
-        'id': p.id,
-        'name': p.name,
-        'price': p.price or 'Sur demande',
-        'image': p.image_url
-    } for p in recommendations]
+  if (!recognition) {
+    recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR'; // Langue française
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
-    return jsonify({'reply': response_text, 'products': recs_data})
+    recognition.onstart = function() {
+      isRecording = true;
+      document.getElementById('micIcon').className = "fa-solid fa-microphone-slash text-red-600 animate-pulse";
+      showToast("Écoute en cours... Parlez à l'IA 🎙️");
+    };
 
+    recognition.onresult = function(event) {
+      const speechToText = event.results[0][0].transcript;
+      document.getElementById('aiInput').value = speechToText;
+      // Envoyer automatiquement le message après la dictée vocale
+      sendAiMessage();
+    };
+
+    recognition.onerror = function(event) {
+      console.error("Erreur vocale :", event.error);
+      stopRecordingStyle();
+    };
+
+    recognition.onend = function() {
+      stopRecordingStyle();
+    };
+  }
+
+  if (isRecording) {
+    recognition.stop();
+  } else {
+    recognition.start();
+  }
+}
+
+function stopRecordingStyle() {
+  isRecording = false;
+  const micIcon = document.getElementById('micIcon');
+  if (micIcon) {
+    micIcon.className = "fa-solid fa-microphone";
+  }
+}
 @app.route('/api/check-promo', methods=['POST'])
 def check_promo():
     data = request.get_json() or {}

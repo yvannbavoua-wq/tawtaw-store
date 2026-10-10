@@ -275,12 +275,19 @@
       </div>
     </div>
 
-    <div class="p-2 border-t border-gray-200 dark:border-gray-800 flex gap-1.5 bg-gray-50 dark:bg-gray-950">
+    <div class="p-2 border-t border-gray-200 dark:border-gray-800 flex gap-1.5 bg-gray-50 dark:bg-gray-950 items-center">
+      <!-- Bouton Microphone Vocal -->
+      <button type="button" onclick="toggleVoiceRecognition()" id="micBtn" class="text-gray-500 hover:text-red-600 p-2 rounded-xl text-sm transition" title="Parler à l'IA">
+        <i id="micIcon" class="fa-solid fa-microphone"></i>
+      </button>
+
       <input type="text" id="aiInput" placeholder="Ex: Propose-moi une tenue..." class="flex-grow text-xs p-2 rounded-xl border dark:border-gray-700 dark:bg-gray-800 dark:text-white outline-none" onkeypress="if(event.key==='Enter') sendAiMessage()">
+      
       <button onclick="sendAiMessage()" class="bg-black dark:bg-white text-white dark:text-black font-bold px-3 py-2 rounded-xl text-xs">
         <i class="fa-solid fa-paper-plane"></i>
       </button>
     </div>
+</div>
   </div>
 
   <!-- POPUP PREUVE SOCIALE -->
