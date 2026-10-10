@@ -178,10 +178,9 @@ def admin():
     products = Product.query.all()
     promos = PromoCode.query.all()
     return render_template('admin.html', products=products, promos=promos)
-
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
-          new_product = Product(
+    new_product = Product(
         name=request.form['name'],
         category=request.form.get('category'),
         subcategory=request.form.get('subcategory'),
@@ -192,8 +191,8 @@ def add_product():
         description=request.form.get('description', ''),
         is_featured=True if request.form.get('is_featured') else False,
         in_stock=True if request.form.get('in_stock') else True
-          )
-      db.session.add(new_product)
+    )
+    db.session.add(new_product)
     db.session.commit()
 
     # Enregistrement des photos multiples
@@ -214,6 +213,7 @@ def add_product():
 
     db.session.commit()
     return redirect('/admin')
+
 
 @app.route('/admin/add-promo', methods=['POST'])
 def add_promo():
