@@ -181,29 +181,32 @@ def admin():
 
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
-    name = request.form.get('name')
-    category = request.form.get('category')
-    subcategory = request.form.get('subcategory')
-    image_url = request.form.get('image_url')
-    price = request.form.get('price', '')
-    promo_info = request.form.get('promo_info', '')
-    options = request.form.get('options', '')
-    description = request.form.get('description', '')
-    stock_qty = request.form.get('stock_qty', type=int) or 5
-    is_featured = True if request.form.get('is_featured') else False
-    in_stock = True if request.form.get('in_stock') else False
+    new_product = Product(
+        name=request.form['name'],
+        price=request.form['price'],
+        description=request.form.get('description', '')
+    )
+    db.session.add(new_product)
+    db.session.commit()
 
-    if name and category and subcategory and image_url:
-        new_prod = Product(
-            name=name, category=category, subcategory=subcategory,
-            image_url=image_url, price=price, promo_info=promo_info,
-            options=options, description=description, stock_qty=stock_qty,
-            is_featured=is_featured, in_stock=in_stock
-        )
-        db.session.add(new_prod)
-        db.session.commit()
-        flash('Produit ajouté !')
-    return redirect(url_for('admin'))
+    # Enregistrement des photos multiples
+    for photo in request.files.getlist('photos'):
+        if photo and photo.filename != '':
+            filename = secure_filename(photo.filename)
+            filepath = os.path.join('static/uploads', filename)
+            photo.save(filepath)
+            db.session.add(ProductMedia(product_id=new_product.id, file_url=f'/static/uploads/{filename}', media_type='image'))
+
+    # Enregistrement des vidéos multiples
+    for video in request.files.getlist('videos'):
+        if video and video.filename != '':
+            filename = secure_filename(video.filename)
+            filepath = os.path.join('static/uploads', filename)
+            video.save(filepath)
+            db.session.add(ProductMedia(product_id=new_product.id, file_url=f'/static/uploads/{filename}', media_type='video'))
+
+    db.session.commit()
+    return redirect('/admin')
 
 @app.route('/admin/add-promo', methods=['POST'])
 def add_promo():

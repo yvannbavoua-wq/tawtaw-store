@@ -43,14 +43,22 @@
     <!-- FORMULAIRE DE CRÉATION DE PRODUIT -->
     <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 mb-8 shadow-xl">
       <h2 class="text-xs font-bold uppercase mb-4 text-gray-300">Ajouter un article</h2>
-      <form action="/admin/add-product" method="POST" class="space-y-3">
-        <input type="text" name="name" placeholder="Nom du produit" required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+      <form action="/admin/add-product" method="POST" enctype="multipart/form-data" class="space-y-3">
+             <input type="text" name="name" placeholder="Nom du produit" required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         <div class="grid grid-cols-2 gap-3">
           <input type="text" name="category" placeholder="Catégorie (HOMME / FEMME / COSMETIQUES)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
           <input type="text" name="subcategory" placeholder="Sous-catégorie (ex: T-SHIRTS)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         </div>
-        <input type="text" name="image_url" placeholder="Lien d'image ImgBB (ex: https://i.ibb.co/...)" required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
-        
+       <div>
+    <label class="block text-xs text-gray-400 mb-1">Photos du produit (sélectionnez plusieurs images) :</label>
+    <input type="file" name="photos" accept="image/*" multiple required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-gray-300">
+</div>
+
+<div>
+    <label class="block text-xs text-gray-400 mb-1">Vidéos du produit (optionnel) :</label>
+    <input type="file" name="videos" accept="video/*" multiple class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-gray-300">
+</div>
+
         <div class="grid grid-cols-3 gap-3">
           <input type="text" name="price" placeholder="Prix (ex: 10000)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
           <input type="text" name="promo_info" placeholder="Info Promo" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-yellow-400">

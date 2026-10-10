@@ -135,24 +135,41 @@
     <!-- Grille des produits -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
       {% for product in products %}
-      <div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col" data-name="{{ product.name|lower }}" data-category="{{ product.category|upper }}">
-        <div class="relative pt-[100%] bg-gray-100 dark:bg-gray-800">
-          <img src="{{ product.image_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover">
-          <span class="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">TATAW x offx</span>
-          {% if product.promo_info %}
-            <span class="absolute top-2 left-2 bg-yellow-400 text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase shadow">{{ product.promo_info }}</span>
-          {% endif %}
-          
-          {% if not product.in_stock %}
-            <span class="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">En Rupture</span>
-          {% else %}
-            <span class="absolute bottom-2 left-2 bg-green-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">In Stock</span>
-          {% endif %}
-        </div>
+     <div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
+    <div class="relative pt-[100%] bg-gray-100 dark:bg-gray-800">
+        <!-- Affichage des médias (images / vidéos) -->
+        {% if product.media %}
+            {% for item in product.media %}
+                {% if loop.first %}
+                    {% if item.media_type == 'image' %}
+                        <img src="{{ item.file_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover">
+                    {% elif item.media_type == 'video' %}
+                        <video controls class="absolute inset-0 w-full h-full object-cover">
+                            <source src="{{ item.file_url }}" type="video/mp4">
+                        </video>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover">
+        {% endif %}
 
-        <div class="p-3 flex flex-col flex-grow">
-          <p class="text-[9px] font-bold uppercase text-red-600 mb-1">{{ product.category }} • {{ product.subcategory }}</p>
-          <h3 class="text-xs font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">{{ product.name }}</h3>
+        <!-- Badges Promo / Stock -->
+        {% if product.promo_info %}
+            <span class="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">{{ product.promo_info }}</span>
+        {% endif %}
+
+        {% if not product.in_stock %}
+            <span class="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">En Rupture</span>
+        {% else %}
+            <span class="absolute bottom-2 left-2 bg-green-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">En Stock</span>
+        {% endif %}
+    </div>
+
+    <div class="p-3 flex flex-col flex-grow">
+        <p class="text-[9px] font-bold uppercase text-red-600 mb-1">{{ product.category }} • {{ product.subcategory }}</p>
+        <h3 class="text-xs font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">{{ product.name }}</h3>
+
 
           <!-- NOUVEAU: Notation Étoiles (Rating) -->
           <div class="flex items-center gap-1 text-yellow-400 text-[10px] mb-1.5">
