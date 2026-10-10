@@ -216,16 +216,17 @@ def add_product():
     for url in saved_photos:
         db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type='image'))
 
-    # Enregistrement des vidéos multiples
+       # Enregistrement des vidéos multiples
     for video in request.files.getlist('videos'):
         if video and video.filename != '':
             filename = secure_filename(video.filename)
             filepath = os.path.join('static/uploads', filename)
-          video.save(filepath)
-          db.session.add(ProductMedia(product_id=new_product.id, file_url=f'/static/uploads/{filename}', media_type='video'))
+            video.save(filepath)
+            db.session.add(ProductMedia(product_id=new_product.id, file_url=f'/static/uploads/{filename}', media_type='video'))
 
     db.session.commit()
     return redirect('/admin')
+
 
 @app.route('/admin/add-promo', methods=['POST'])
 def add_promo():
