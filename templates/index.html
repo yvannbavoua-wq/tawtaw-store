@@ -666,6 +666,12 @@
       let recognition = null;
 let isRecording = false;
 
+function toggleAiChat() {
+  const chatWindow = document.getElementById('aiChatWindow');
+  if (chatWindow) {
+    chatWindow.classList.toggle('hidden');
+  }
+}
 function toggleVoiceRecognition() {
   // Vérifier si le navigateur supporte la reconnaissance vocale
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
