@@ -15,6 +15,17 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans min-h-screen flex flex-col transition-colors duration-300">
 
+  <!-- ÉCRAN DE CHARGEMENT / WAKE-UP SERVEUR (RENDER FREE TIER) -->
+  <div id="serverWakeScreen" class="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-6 text-center text-white transition-opacity duration-700">
+    <div class="max-w-md w-full bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-2xl">
+      <div class="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <h2 class="text-xs font-black uppercase text-red-500 tracking-widest mb-1">MOTEUR TATAW EN COURS DE RÉVEIL</h2>
+      <h1 class="text-lg font-black uppercase mb-3">CHARGEMENT DE LA HYPE...</h1>
+      <p class="text-xs text-gray-400 mb-2">Patientez quelques secondes, notre instance sécurisée sort de veille (jusqu'à 50s pour le premier démarrage).</p>
+      <div id="wakeTimer" class="text-[10px] font-mono text-yellow-400 font-bold">Connexion au serveur...</div>
+    </div>
+  </div>
+
   <!-- ÉCRAN DE VERROUILLAGE / COMPTE À REBOURS EXCLUSIF (BLOQUANT) -->
   <div id="dropLockScreen" class="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center p-6 text-center text-white hidden">
     <div class="max-w-md w-full bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-2xl">
@@ -347,6 +358,34 @@
 
   <!-- SCRIPTS JAVASCRIPT -->
   <script>
+    // --- VÉRIFICATION DU RÉVEIL SERVEUR (PING PENDING) ---
+    async function checkServerAwake() {
+      const wakeScreen = document.getElementById('serverWakeScreen');
+      const wakeTimer = document.getElementById('wakeTimer');
+      let secondsWaited = 0;
+
+      const timer = setInterval(() => {
+        secondsWaited++;
+        wakeTimer.innerText = `Temps d'attente : ${secondsWaited}s (Le serveur se réveille...)`;
+      }, 1000);
+
+      while (true) {
+        try {
+          const res = await fetch('/api/ping');
+          if (res.ok) {
+            clearInterval(timer);
+            wakeScreen.style.opacity = '0';
+            setTimeout(() => wakeScreen.classList.add('hidden'), 700);
+            break;
+          }
+        } catch (e) {
+          // Le serveur dort encore, on réessaie dans 2 secondes
+        }
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+    checkServerAwake();
+
     // --- COMPTE À REBOURS MINUIT BLINDÉ ---
     const dropDate = new Date().setHours(24,00,00,0); 
     const urlParams = new URLSearchParams(window.location.search);

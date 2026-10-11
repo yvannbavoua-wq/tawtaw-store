@@ -109,6 +109,12 @@ with app.app_context():
         db.session.add(default_p)
         db.session.commit()
 
+# --- ROUTE KEEP-ALIVE ---
+
+@app.route('/api/ping')
+def ping():
+    return jsonify({"status": "active", "message": "TATAW Server is awake 🔥"}), 200
+
 # --- ROUTES SITE & USER ---
 
 @app.route('/')
