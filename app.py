@@ -245,78 +245,97 @@ def admin():
 
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
-    photos = request.files.getlist('photos')
-    captions = request.form.getlist('captions')
-    first_image_url = ''
-    saved_media = []
-    
-    for idx, photo in enumerate(photos):
-        if photo and photo.filename != '':
-            filename = secure_filename(photo.filename)
-            file_bytes = photo.read()
-            
-            if supabase:
-                path_on_storage = f"products/{datetime.utcnow().timestamp()}_{filename}"
-                supabase.storage.from_("tataw-media").upload(
-                    path_on_storage, 
-                    file_bytes, 
-                    file_options={"content-type": photo.content_type}
-                )
-                url = supabase.storage.from_("tataw-media").get_public_url(path_on_storage)
-            else:
-                os.makedirs('static/uploads', exist_ok=True)
-                filepath = os.path.join('static/uploads', filename)
-                photo.seek(0)
-                photo.save(filepath)
-                url = f'/static/uploads/{filename}'
+    try:
+        photos = request.files.getlist('photos')
+        captions = request.form.getlist('captions')
+        first_image_url = ''
+        saved_media = []
+        
+        for idx, photo in enumerate(photos):
+            if photo and photo.filename != '':
+                filename = secure_filename(photo.filename)
+                file_bytes = photo.read()
+                
+                url = ''
+                if supabase:
+                    try:
+                        path_on_storage = f"products/{datetime.utcnow().timestamp()}_{filename}"
+                        supabase.storage.from_("tataw-media").upload(
+                            path_on_storage, 
+                            file_bytes, 
+                            file_options={"content-type": photo.content_type}
+                        )
+                        url = supabase.storage.from_("tataw-media").get_public_url(path_on_storage)
+                    except Exception as ex:
+                        print(f"Erreur Supabase Storage: {ex}")
+                
+                if not url:
+                    os.makedirs('static/uploads', exist_ok=True)
+                    filepath = os.path.join('static/uploads', filename)
+                    photo.seek(0)
+                    photo.save(filepath)
+                    url = f'/static/uploads/{filename}'
 
-            caption_text = captions[idx] if idx < len(captions) and captions[idx].strip() != '' else f"Vue {idx+1}"
-            if not first_image_url:
-                first_image_url = url
-            saved_media.append((url, 'image', caption_text))
+                caption_text = captions[idx] if idx < len(captions) and captions[idx].strip() != '' else f"Vue {idx+1}"
+                if not first_image_url:
+                    first_image_url = url
+                saved_media.append((url, 'image', caption_text))
 
-    new_product = Product(
-        name=request.form['name'],
-        category=request.form.get('category'),
-        subcategory=request.form.get('subcategory'),
-        price=request.form['price'],
-        promo_info=request.form.get('promo_info', ''),
-        stock_qty=request.form.get('stock_qty', 0),
-        options=request.form.get('options', ''),
-        description=request.form.get('description', ''),
-        is_featured=True if request.form.get('is_featured') else False,
-        in_stock=True if request.form.get('in_stock') else True,
-        image_url=first_image_url
-    )
-    db.session.add(new_product)
-    db.session.commit()
+        if not first_image_url:
+            first_image_url = "https://i.ibb.co/SXHNbgRS/Photoroom-20261006-212634.jpg"
 
-    for url, mtype, cap in saved_media:
-        db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type=mtype, caption=cap))
+        new_product = Product(
+            name=request.form['name'],
+            category=request.form.get('category'),
+            subcategory=request.form.get('subcategory'),
+            price=request.form['price'],
+            promo_info=request.form.get('promo_info', ''),
+            stock_qty=int(request.form.get('stock_qty') or 5),
+            options=request.form.get('options', ''),
+            description=request.form.get('description', ''),
+            is_featured=True if request.form.get('is_featured') else False,
+            in_stock=True if request.form.get('in_stock') else True,
+            image_url=first_image_url
+        )
+        db.session.add(new_product)
+        db.session.commit()
 
-    for video in request.files.getlist('videos'):
-        if video and video.filename != '':
-            filename = secure_filename(video.filename)
-            v_bytes = video.read()
-            if supabase:
-                path_on_storage = f"products/vid_{datetime.utcnow().timestamp()}_{filename}"
-                supabase.storage.from_("tataw-media").upload(
-                    path_on_storage, 
-                    v_bytes, 
-                    file_options={"content-type": video.content_type}
-                )
-                v_url = supabase.storage.from_("tataw-media").get_public_url(path_on_storage)
-            else:
-                os.makedirs('static/uploads', exist_ok=True)
-                filepath = os.path.join('static/uploads', filename)
-                video.seek(0)
-                video.save(filepath)
-                v_url = f'/static/uploads/{filename}'
-            
-            db.session.add(ProductMedia(product_id=new_product.id, file_url=v_url, media_type='video', caption="Vidéo produit"))
+        for url, mtype, cap in saved_media:
+            db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type=mtype, caption=cap))
 
-    db.session.commit()
-    return redirect('/admin')
+        for video in request.files.getlist('videos'):
+            if video and video.filename != '':
+                filename = secure_filename(video.filename)
+                v_bytes = video.read()
+                v_url = ''
+                if supabase:
+                    try:
+                        path_on_storage = f"products/vid_{datetime.utcnow().timestamp()}_{filename}"
+                        supabase.storage.from_("tataw-media").upload(
+                            path_on_storage, 
+                            v_bytes, 
+                            file_options={"content-type": video.content_type}
+                        )
+                        v_url = supabase.storage.from_("tataw-media").get_public_url(path_on_storage)
+                    except Exception:
+                        pass
+                
+                if not v_url:
+                    os.makedirs('static/uploads', exist_ok=True)
+                    filepath = os.path.join('static/uploads', filename)
+                    video.seek(0)
+                    video.save(filepath)
+                    v_url = f'/static/uploads/{filename}'
+                
+                db.session.add(ProductMedia(product_id=new_product.id, file_url=v_url, media_type='video', caption="Vidéo produit"))
+
+        db.session.commit()
+        flash("Article ajouté avec succès !")
+        return redirect('/admin')
+    except Exception as e:
+        print(f"Erreur critique lors de l'ajout du produit: {e}")
+        flash(f"Erreur lors de l'ajout : {str(e)}")
+        return redirect('/admin')
 
 @app.route('/admin/add-promo', methods=['POST'])
 def add_promo():
