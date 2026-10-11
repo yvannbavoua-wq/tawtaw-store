@@ -29,7 +29,23 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans min-h-screen flex flex-col transition-colors duration-300">
 
-  <!-- BANNIÈRE EN HAUT -->
+  <!-- BANNIÈRE COMPTE À REBOURS / DROP TATAW (Minuit ce soir) -->
+  <div id="dropBanner" class="bg-red-600 text-white font-mono text-center py-3 px-4 shadow-lg flex flex-col md:flex-row items-center justify-between gap-2 z-50">
+    <div class="flex items-center gap-2">
+      <span class="animate-ping relative inline-flex h-3 w-3 rounded-full bg-yellow-400"></span>
+      <span class="font-black uppercase text-xs tracking-wider">🔥 PROCHAIN DROP OFFICIEL TATAW :</span>
+    </div>
+    
+    <div class="font-black text-lg tracking-widest text-yellow-300" id="countdownTimer">
+      00h 00m 00s
+    </div>
+
+    <a href="https://chat.whatsapp.com/Ch3zFqqKM9HAJP7gnWsSSN?s=cl&p=i&mlu=4&ilr=4&iam=0" target="_blank" class="bg-black text-white hover:bg-gray-900 text-[10px] font-bold py-1.5 px-3 rounded-lg uppercase tracking-wider transition">
+      Rejoindre la VIP Zone WhatsApp 💬
+    </a>
+  </div>
+
+  <!-- BANNIÈRE SECONDAIRE -->
   <div class="bg-gradient-to-r from-red-800 via-black to-red-800 text-white py-2 px-4 text-center text-[11px] font-black uppercase tracking-wider shadow-md">
     ✨ PREMIER DROP OFFICIEL TATAW - LIVRAISON À YAOUNDÉ & PARTOUT AU CAMEROUN ✨
   </div>
@@ -199,7 +215,7 @@
             </div>
           {% endif %}
 
-          <!-- GALERIE MÉDIA SECONDAIRE (PHOTOS ET VIDÉOS SUPPLÉMENTAIRES) -->
+          <!-- GALERIE MÉDIA SECONDAIRE -->
           {% if media_list %}
             <div class="mb-3">
               <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Photos & Vidéos :</p>
@@ -212,7 +228,7 @@
               </div>
             </div>
 
-            <!-- ESPACE VIDÉO DÉDIÉ ("VOIR EN VIDÉO") -->
+            <!-- ESPACE VIDÉO DÉDIÉ -->
             <div class="mb-3">
               {% for m in media_list %}
                 {% if m.media_type == 'video' %}
@@ -287,7 +303,6 @@
         <i class="fa-solid fa-paper-plane"></i>
       </button>
     </div>
-</div>
   </div>
 
   <!-- POPUP PREUVE SOCIALE -->
@@ -401,6 +416,29 @@
 
   <!-- SCRIPTS JAVASCRIPT -->
   <script>
+    // --- COMPTE À REBOURS MINUIT CE SOIR ---
+    const nowTime = new Date();
+    const dropDate = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate() + 1, 0, 0, 0).getTime();
+
+    const timerInterval = setInterval(function() {
+      const currentTime = new Date().getTime();
+      const distance = dropDate - currentTime;
+
+      if (distance < 0) {
+        clearInterval(timerInterval);
+        document.getElementById("countdownTimer").innerHTML = "🚨 LE DROP EST OUVERT ! 🚨";
+        return;
+      }
+
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      document.getElementById("countdownTimer").innerHTML = 
+        hours + "h " + minutes + "m " + seconds + "s";
+    }, 1000);
+
+    // --- LOGIQUE BOUTIQUE & MODALS ---
     let cart = JSON.parse(localStorage.getItem('tataw_cart')) || [];
     let appliedPromo = JSON.parse(localStorage.getItem('tataw_promo')) || null;
     let isDarkMode = localStorage.getItem('tataw_dark') === 'true';
@@ -429,7 +467,14 @@
     function openUserModal() { document.getElementById('userModal').classList.remove('hidden'); }
     function closeUserModal() { document.getElementById('userModal').classList.add('hidden'); }
     function toggleCart() { document.getElementById('cartSidebar').classList.toggle('translate-x-full'); }
-    function toggleAiChat() { document.getElementById('aiChatWindow').classList.toggle('hidden'); }
+    
+    // FONCTION DU TCHAT IA
+    function toggleAiChat() { 
+      const w = document.getElementById('aiChatWindow');
+      if (w) {
+        w.classList.toggle('hidden');
+      }
+    }
 
     function switchProductImage(productId, url) {
       const imgElem = document.getElementById(`main-img-${productId}`);
@@ -663,66 +708,61 @@
       renderOrderHistory();
 
       window.open(`https://wa.me/237653848517?text=${msg}`, '_blank');
-      let recognition = null;
-let isRecording = false;
+    }
 
-function toggleAiChat() {
-  const chatWindow = document.getElementById('aiChatWindow');
-  if (chatWindow) {
-    chatWindow.classList.toggle('hidden');
-  }
-}
-function toggleVoiceRecognition() {
-  // Vérifier si le navigateur supporte la reconnaissance vocale
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  
-  if (!SpeechRecognition) {
-    alert("La reconnaissance vocale n'est pas supportée par votre navigateur. Utilisez Chrome ou Safari.");
-    return;
-  }
+    // --- RECONNAISSANCE VOCALE IA ---
+    let recognition = null;
+    let isRecording = false;
 
-  if (!recognition) {
-    recognition = new SpeechRecognition();
-    recognition.lang = 'fr-FR'; // Langue française
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    function toggleVoiceRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        alert("La reconnaissance vocale n'est pas supportée par votre navigateur. Utilisez Chrome ou Safari.");
+        return;
+      }
 
-    recognition.onstart = function() {
-      isRecording = true;
-      document.getElementById('micIcon').className = "fa-solid fa-microphone-slash text-red-600 animate-pulse";
-      showToast("Écoute en cours... Parlez à l'IA 🎙️");
-    };
+      if (!recognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
-    recognition.onresult = function(event) {
-      const speechToText = event.results[0][0].transcript;
-      document.getElementById('aiInput').value = speechToText;
-      // Envoyer automatiquement le message après la dictée vocale
-      sendAiMessage();
-    };
+        recognition.onstart = function() {
+          isRecording = true;
+          document.getElementById('micIcon').className = "fa-solid fa-microphone-slash text-red-600 animate-pulse";
+          showToast("Écoute en cours... Parlez à l'IA 🎙️");
+        };
 
-    recognition.onerror = function(event) {
-      console.error("Erreur vocale :", event.error);
-      stopRecordingStyle();
-    };
+        recognition.onresult = function(event) {
+          const speechToText = event.results[0][0].transcript;
+          document.getElementById('aiInput').value = speechToText;
+          sendAiMessage();
+        };
 
-    recognition.onend = function() {
-      stopRecordingStyle();
-    };
-  }
+        recognition.onerror = function(event) {
+          console.error("Erreur vocale :", event.error);
+          stopRecordingStyle();
+        };
 
-  if (isRecording) {
-    recognition.stop();
-  } else {
-    recognition.start();
-  }
-}
+        recognition.onend = function() {
+          stopRecordingStyle();
+        };
+      }
 
-function stopRecordingStyle() {
-  isRecording = false;
-  const micIcon = document.getElementById('micIcon');
-  if (micIcon) {
-    micIcon.className = "fa-solid fa-microphone";
-  }
+      if (isRecording) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+    }
+
+    function stopRecordingStyle() {
+      isRecording = false;
+      const micIcon = document.getElementById('micIcon');
+      if (micIcon) {
+        micIcon.className = "fa-solid fa-microphone";
+      }
     }
   </script>
 </body>
