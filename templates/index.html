@@ -83,7 +83,7 @@
     </div>
   </nav>
 
-  <!-- NAVIGATION 3 ONGLETS (NOUVEAUTÉS, COLLECTIONS, HISTOIRE) -->
+  <!-- NAVIGATION 3 ONGLETS -->
   <div class="max-w-xl mx-auto my-5 px-4 text-center">
     <div class="grid grid-cols-3 gap-1.5 bg-gray-200 dark:bg-gray-800 p-1.5 rounded-2xl">
       <button onclick="switchTab('news')" id="tab-news" class="py-2.5 px-2 rounded-xl text-[11px] font-black uppercase transition-all text-gray-600 dark:text-gray-400">🔥 NOUVEAUTÉS</button>
@@ -107,7 +107,7 @@
     </div>
   </div>
 
-  <!-- SECTION NOTRE HISTOIRE (BIO) -->
+  <!-- SECTION NOTRE HISTOIRE -->
   <div id="section-bio" class="hidden max-w-2xl mx-auto my-8 p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-800 shadow-sm text-center">
     <span class="bg-red-100 text-red-600 text-[10px] font-black px-3 py-1 rounded-full uppercase">À propos de TATAW</span>
     <h3 class="text-lg font-black uppercase text-gray-900 dark:text-white mt-3 mb-2">L'Amour qui ne s'efface jamais ✨</h3>
@@ -132,7 +132,6 @@
       {% for product in products %}
       <div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm flex flex-col" data-category="{{ product.category|upper }}" data-name="{{ product.name|lower }}" data-description="{{ product.description|lower }}">
         
-        <!-- VISUEL PRINCIPAL & OPTIONS / SWIPER -->
         <div class="relative pt-[100%] bg-gray-100 dark:bg-gray-800">
           <img id="main-img-{{ product.id }}" src="{{ product.image_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300">
 
@@ -151,7 +150,6 @@
           <p class="text-[10px] font-bold uppercase text-red-600 mb-1">{{ product.category }} • {{ product.subcategory }}</p>
           <h3 class="text-sm font-black text-gray-900 dark:text-white mb-1">{{ product.name }}</h3>
 
-          <!-- DESCRIPTION TRONQUÉE AVEC "LIRE LA SUITE" -->
           {% if product.description %}
             <div class="text-xs text-gray-600 dark:text-gray-400 mb-3">
               <span id="desc-short-{{ product.id }}">{{ product.description[:70] }}{% if product.description|length > 70 %}...{% endif %}</span>
@@ -162,7 +160,6 @@
             </div>
           {% endif %}
 
-          <!-- OPTIONS COULEURS / TAILLES INTERACTIVES -->
           {% set media_list = product.media if product.media is defined else [] %}
           {% if product.options %}
             <div class="mb-3">
@@ -186,20 +183,6 @@
             </div>
           {% endif %}
 
-          <!-- GALERIE MÉDIA SECONDAIRE / VIDÉOS ASSOCIÉES -->
-          {% if media_list %}
-            <div class="mb-3">
-              <div class="flex gap-2 overflow-x-auto pb-1">
-                {% for m in media_list %}
-                  {% if m.media_type == 'image' %}
-                    <img src="{{ m.file_url }}" onclick="switchProductImage('{{ product.id }}', '{{ m.file_url }}')" title="{{ m.caption }}" class="w-10 h-10 object-cover rounded-lg cursor-pointer border border-gray-700 hover:border-red-600 transition shrink-0">
-                  {% endif %}
-                {% endfor %}
-              </div>
-            </div>
-          {% endif %}
-
-          <!-- PRIX ET BOUTONS D'ACHAT -->
           <div class="mt-auto pt-3 border-t border-gray-200 dark:border-gray-800 space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-sm font-black text-gray-900 dark:text-white"><span class="product-price" data-price="{{ product.price }}">{% if product.price %}{{ product.price }}{% else %}Sur demande{% endif %}</span> FCFA</span>
@@ -246,24 +229,18 @@
     </div>
 
     <div class="p-2 border-t border-gray-200 dark:border-gray-800 flex gap-1.5 bg-gray-50 dark:bg-gray-950 items-center">
-      <button type="button" onclick="toggleVoiceRecognition()" id="micBtn" class="text-gray-500 hover:text-red-600 p-2 rounded-xl text-sm transition" title="Parler à l'IA">
-        <i id="micIcon" class="fa-solid fa-microphone"></i>
-      </button>
-
       <input type="text" id="aiInput" placeholder="Ex: Propose-moi une tenue..." class="flex-grow text-xs p-2 rounded-xl border dark:border-gray-700 dark:bg-gray-800 dark:text-white outline-none" onkeypress="if(event.key==='Enter') sendAiMessage()">
-      
       <button onclick="sendAiMessage()" class="bg-black dark:bg-white text-white dark:text-black font-bold px-3 py-2 rounded-xl text-xs">
         <i class="fa-solid fa-paper-plane"></i>
       </button>
     </div>
   </div>
 
-  <!-- MODAL PARAMÈTRES (DEVISE & THÈME) -->
+  <!-- MODAL PARAMÈTRES -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full relative border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
       <button onclick="closeSettingsModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
       <h3 class="text-sm font-black uppercase mb-4 text-red-600">Paramètres de la Boutique</h3>
-      
       <div class="space-y-4 text-xs">
         <div>
           <label class="block text-gray-500 mb-1 font-bold uppercase">Devise :</label>
@@ -278,33 +255,6 @@
           <button onclick="toggleDarkMode()" class="w-full bg-black dark:bg-white text-white dark:text-black py-2.5 rounded-xl font-bold uppercase shadow">Basculer Mode Clair / Sombre 🌓</button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- MODAL AUTHENTIFICATION AVANCÉE (PAYS, VILLE, OPÉRATEUR) -->
-  <div id="authModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full text-center relative border border-gray-200 dark:border-gray-800">
-      <button onclick="closeAuthModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
-      <h3 class="text-base font-black uppercase text-gray-900 dark:text-white mb-1">ESPACE CLIENT TATAW</h3>
-      <form action="/login-whatsapp" method="POST" class="space-y-3 mt-4 text-left">
-        <input type="text" name="username" placeholder="Nom complet / Pseudo" required class="w-full text-xs p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white outline-none">
-        <input type="tel" name="phone" placeholder="Numéro Mobile (ex: +237600000000)" required class="w-full text-xs p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white outline-none">
-        
-        <div class="grid grid-cols-2 gap-2">
-          <input type="text" name="country" placeholder="Pays (ex: Cameroun)" required class="text-xs p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white outline-none">
-          <input type="text" name="city" placeholder="Ville (ex: Yaoundé)" required class="text-xs p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white outline-none">
-        </div>
-
-        <div>
-          <label class="text-[10px] text-gray-500 block mb-1 font-bold uppercase">Opérateur de Paiement :</label>
-          <select name="operator" class="w-full text-xs p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700 font-bold outline-none">
-            <option value="ORANGE">Orange Money (Cameroun)</option>
-            <option value="MTN">MTN Mobile Money</option>
-          </select>
-        </div>
-
-        <button type="submit" class="w-full bg-black dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-xs uppercase shadow">Valider mon Profil 🚀</button>
-      </form>
     </div>
   </div>
 
@@ -328,15 +278,9 @@
         </select>
       </div>
 
-      <div class="flex gap-2 pt-1">
-        <input type="text" id="cartPromoInput" placeholder="CODE PROMO" class="w-full text-xs p-2 rounded-lg border dark:border-gray-700 dark:bg-gray-900 font-mono font-bold uppercase">
-        <button onclick="applyCartPromo()" class="bg-black dark:bg-white text-white dark:text-black font-bold text-xs px-3 rounded-lg uppercase">OK</button>
-      </div>
-
       <div class="space-y-1 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs">
         <div class="flex justify-between text-gray-500"><span>Articles:</span><span id="cart-subtotal">0 FCFA</span></div>
         <div class="flex justify-between text-gray-500"><span>Livraison:</span><span id="cart-shipping">1 500 FCFA</span></div>
-        <div id="discount-row" class="flex justify-between text-green-500 font-bold hidden"><span id="discount-label">Réduction:</span><span id="cart-discount">-0 FCFA</span></div>
         <div class="flex justify-between font-black text-sm pt-1 border-t border-gray-700"><span>TOTAL NET:</span><span id="cart-total" class="text-red-600">0 FCFA</span></div>
       </div>
     </div>
@@ -358,7 +302,6 @@
 
   <!-- SCRIPTS JAVASCRIPT -->
   <script>
-    // --- VÉRIFICATION DU RÉVEIL SERVEUR (PING PENDING) ---
     async function checkServerAwake() {
       const wakeScreen = document.getElementById('serverWakeScreen');
       const wakeTimer = document.getElementById('wakeTimer');
@@ -378,15 +321,12 @@
             setTimeout(() => wakeScreen.classList.add('hidden'), 700);
             break;
           }
-        } catch (e) {
-          // Le serveur dort encore, on réessaie dans 2 secondes
-        }
+        } catch (e) {}
         await new Promise(r => setTimeout(r, 2000));
       }
     }
     checkServerAwake();
 
-    // --- COMPTE À REBOURS MINUIT BLINDÉ ---
     const dropDate = new Date().setHours(24,00,00,0); 
     const urlParams = new URLSearchParams(window.location.search);
     const isAdminBypass = urlParams.get('admin') === '1';
@@ -395,7 +335,7 @@
       const now = new Date().getTime();
       const distance = dropDate - now;
 
-      if (distance < 0 && !isAdminBypass) {
+      if (distance < 0 || isAdminBypass) {
         clearInterval(timerInterval);
         document.getElementById('dropLockScreen').classList.add('hidden');
         return;
@@ -414,7 +354,6 @@
     }, 1000);
 
     let cart = JSON.parse(localStorage.getItem('tataw_cart')) || [];
-    let appliedPromo = JSON.parse(localStorage.getItem('tataw_promo')) || null;
     let isDarkMode = localStorage.getItem('tataw_dark') === 'true';
 
     if (isDarkMode) document.documentElement.classList.add('dark');
@@ -456,17 +395,8 @@
 
     function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
     function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
-    function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
-    function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
-    function openUserModal() { document.getElementById('userModal')?.classList.remove('hidden'); }
-    function closeUserModal() { document.getElementById('userModal')?.classList.add('hidden'); }
     function toggleCart() { document.getElementById('cartSidebar').classList.toggle('translate-x-full'); }
     function toggleAiChat() { document.getElementById('aiChatWindow').classList.toggle('hidden'); }
-
-    function switchProductImage(productId, url) {
-      const imgElem = document.getElementById(`main-img-${productId}`);
-      if (imgElem) imgElem.src = url;
-    }
 
     function selectProductOption(productId, optionValue, imageUrl) {
       const selectElem = document.getElementById(`option-${productId}`);
@@ -475,13 +405,6 @@
         const mainImg = document.getElementById(`main-img-${productId}`);
         if (mainImg) mainImg.src = imageUrl;
       }
-      document.querySelectorAll(`.option-pill-${productId}`).forEach(pill => {
-        if (pill.innerText.trim() === optionValue) {
-          pill.className = `option-pill-${productId} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg bg-black text-white dark:bg-white dark:text-black transition`;
-        } else {
-          pill.className = `option-pill-${productId} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg border border-gray-700 transition`;
-        }
-      });
     }
 
     function changeCurrency() {
@@ -503,22 +426,26 @@
       chatBox.innerHTML += `<div class="bg-black text-white p-2 rounded-xl ml-auto max-w-[80%] text-right">${text}</div>`;
       input.value = '';
 
-      const res = await fetch('/api/ai-assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
-      });
-      const data = await res.json();
-
-      let recsHtml = '';
-      if (data.products && data.products.length > 0) {
-        recsHtml = '<div class="grid grid-cols-2 gap-1.5 mt-2">';
-        data.products.forEach(p => {
-          recsHtml += `<div class="bg-white dark:bg-gray-900 border p-1.5 rounded-lg text-center"><img src="${p.image}" class="w-full h-16 object-cover rounded mb-1"><p class="font-bold text-[9px] truncate">${p.name}</p><p class="text-red-500 font-bold text-[9px]">${p.price} FCFA</p></div>`;
+      try {
+        const res = await fetch('/api/ai-assistant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
         });
-        recsHtml += '</div>';
+        const data = await res.json();
+
+        let recsHtml = '';
+        if (data.products && data.products.length > 0) {
+          recsHtml = '<div class="grid grid-cols-2 gap-1.5 mt-2">';
+          data.products.forEach(p => {
+            recsHtml += `<div class="bg-white dark:bg-gray-900 border p-1.5 rounded-lg text-center"><img src="${p.image_url}" class="w-full h-16 object-cover rounded mb-1"><p class="font-bold text-[9px] truncate">${p.name}</p><p class="text-red-500 font-bold text-[9px]">${p.price} FCFA</p></div>`;
+          });
+          recsHtml += '</div>';
+        }
+        chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2">${data.reply}${recsHtml}</div>`;
+      } catch (e) {
+        chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2">Désolé, je rencontre un problème de connexion. Réessayez dans un instant.</div>`;
       }
-      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2">${data.reply}${recsHtml}</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 

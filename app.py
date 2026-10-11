@@ -48,8 +48,8 @@ class ProductMedia(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     file_url = db.Column(db.String(255), nullable=False)
-    media_type = db.Column(db.String(50), nullable=False)  # 'image' ou 'video'
-    caption = db.Column(db.String(255), nullable=True)     # Description spécifique liée à l'image
+    media_type = db.Column(db.String(50), nullable=False)
+    caption = db.Column(db.String(255), nullable=True)
 
 class PromoCode(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -62,7 +62,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), nullable=False)
     phone = db.Column(db.String(30), unique=True, nullable=False)
-    operator = db.Column(db.String(20), nullable=True)  # ORANGE ou MTN
+    operator = db.Column(db.String(20), nullable=True)
     country = db.Column(db.String(50), nullable=True)
     city = db.Column(db.String(50), nullable=True)
     is_verified = db.Column(db.Boolean, default=True)
@@ -172,7 +172,7 @@ def ai_assistant():
                         'id': p.id,
                         'name': p.name,
                         'price': p.price or 'Sur demande',
-                        'image': p.image_url
+                        'image_url': p.image_url
                     })
         else:
             reply_text = full_reply.strip()
@@ -391,6 +391,8 @@ def edit_product(id):
             upload_folder = 'static/uploads'
             os.makedirs(upload_folder, exist_ok=True)
             filepath = os.path.join(upload_folder, filename)
+            image_file.seek(0)
+            image_file.save(filepath)
             product.image_url = f"/{filepath}"
 
     db.session.commit()
