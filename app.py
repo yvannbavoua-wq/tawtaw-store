@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from rl_agent import rl_agent
 from werkzeug.utils import secure_filename
 from google import genai
+from supabase import create_client, Client
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'tataw_secret_key_change_in_production')
@@ -17,6 +18,11 @@ if db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+# Initialisation de Supabase Storage pour persistance cloud des images
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
 # --- MODÈLES DE LA BASE DE DONNÉES ---
 
@@ -40,6 +46,7 @@ class ProductMedia(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     file_url = db.Column(db.String(255), nullable=False)
     media_type = db.Column(db.String(50), nullable=False)  # 'image' ou 'video'
+    caption = db.Column(db.String(255), nullable=True)     # Description spécifique liée à l'image
 
 class PromoCode(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -52,6 +59,9 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), nullable=False)
     phone = db.Column(db.String(30), unique=True, nullable=False)
+    operator = db.Column(db.String(20), nullable=True)  # ORANGE ou MTN
+    country = db.Column(db.String(50), nullable=True)
+    city = db.Column(db.String(50), nullable=True)
     is_verified = db.Column(db.Boolean, default=True)
 
 class RLInteraction(db.Model):
@@ -76,7 +86,7 @@ class PollVote(db.Model):
     chosen_model = db.Column(db.String(50), nullable=False)
     voted_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Initialisation automatique de toutes les tables après la déclaration des modèles
+# Initialisation automatique de toutes les tables
 with app.app_context():
     db.create_all()
     if not Product.query.first():
@@ -87,7 +97,7 @@ with app.app_context():
             image_url="https://i.ibb.co/SXHNbgRS/Photoroom-20261006-212634.jpg",
             price="6000",
             options="Noir, Blanc, Bleu",
-            description="T-shirt officiel TATAW  - Édition limitée 2026",
+            description="T-shirt officiel TATAW - Édition limitée 2026",
             is_featured=True,
             in_stock=True,
             stock_qty=3,
@@ -104,6 +114,7 @@ def index():
     featured_products = Product.query.filter_by(is_featured=True).all()
     user = User.query.get(session.get('user_id')) if session.get('user_id') else None
     return render_template('index.html', products=products, featured_products=featured_products, user=user)
+
 # Initialisation du client Gemini API
 client = genai.Client()
 
@@ -168,6 +179,7 @@ def ai_assistant():
             'reply': "Ravi de vous accueillir chez TATAW ! Que recherchez-vous comme style aujourd'hui ?",
             'products': []
         })
+
 @app.route('/api/check-promo', methods=['POST'])
 def check_promo():
     data = request.get_json() or {}
@@ -187,17 +199,23 @@ def check_promo():
 def login_whatsapp():
     username = request.form.get('username')
     phone = request.form.get('phone')
+    operator = request.form.get('operator')
+    country = request.form.get('country')
+    city = request.form.get('city')
 
     if not username or not phone:
-        flash("Veuillez remplir tous les champs.")
+        flash("Veuillez remplir tous les champs obligatoires.")
         return redirect(url_for('index'))
 
     user = User.query.filter_by(phone=phone).first()
     if not user:
-        user = User(username=username, phone=phone, is_verified=True)
+        user = User(username=username, phone=phone, operator=operator, country=country, city=city, is_verified=True)
         db.session.add(user)
     else:
         user.username = username
+        user.operator = operator
+        user.country = country
+        user.city = city
         user.is_verified = True
     
     db.session.commit()
@@ -224,20 +242,36 @@ def admin():
 
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
-    os.makedirs('static/uploads', exist_ok=True)
     photos = request.files.getlist('photos')
+    captions = request.form.getlist('captions')
     first_image_url = ''
-    saved_photos = []
+    saved_media = []
     
-    for photo in photos:
+    for idx, photo in enumerate(photos):
         if photo and photo.filename != '':
             filename = secure_filename(photo.filename)
-            filepath = os.path.join('static/uploads', filename)
-            photo.save(filepath)
-            url = f'/static/uploads/{filename}'
+            file_bytes = photo.read()
+            
+            if supabase:
+                # Upload vers Supabase Storage pour persistance cloud
+                path_on_storage = f"products/{datetime.utcnow().timestamp()}_{filename}"
+                supabase.storage.from_("tataw-media").upload(
+                    path_on_storage, 
+                    file_bytes, 
+                    file_options={"content-type": photo.content_type}
+                )
+                url = supabase.storage.from_("tataw-media").get_public_url(path_on_storage)
+            else:
+                os.makedirs('static/uploads', exist_ok=True)
+                filepath = os.path.join('static/uploads', filename)
+                photo.seek(0)
+                photo.save(filepath)
+                url = f'/static/uploads/{filename}'
+
+            caption_text = captions[idx] if idx < len(captions) and captions[idx].strip() != '' else f"Vue {idx+1}"
             if not first_image_url:
                 first_image_url = url
-            saved_photos.append(url)
+            saved_media.append((url, 'image', caption_text))
 
     new_product = Product(
         name=request.form['name'],
@@ -255,17 +289,31 @@ def add_product():
     db.session.add(new_product)
     db.session.commit()
 
-    # Enregistrer toutes les photos dans ProductMedia
-    for url in saved_photos:
-        db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type='image'))
+    # Enregistrer toutes les photos avec leurs descriptions dans ProductMedia
+    for url, mtype, cap in saved_media:
+        db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type=mtype, caption=cap))
 
     # Enregistrement des vidéos multiples
     for video in request.files.getlist('videos'):
         if video and video.filename != '':
             filename = secure_filename(video.filename)
-            filepath = os.path.join('static/uploads', filename)
-            video.save(filepath)
-            db.session.add(ProductMedia(product_id=new_product.id, file_url=f'/static/uploads/{filename}', media_type='video'))
+            v_bytes = video.read()
+            if supabase:
+                path_on_storage = f"products/vid_{datetime.utcnow().timestamp()}_{filename}"
+                supabase.storage.from_("tataw-media").upload(
+                    path_on_storage, 
+                    v_bytes, 
+                    file_options={"content-type": video.content_type}
+                )
+                v_url = supabase.storage.from_("tataw-media").get_public_url(path_on_storage)
+            else:
+                os.makedirs('static/uploads', exist_ok=True)
+                filepath = os.path.join('static/uploads', filename)
+                video.seek(0)
+                video.save(filepath)
+                v_url = f'/static/uploads/{filename}'
+            
+            db.session.add(ProductMedia(product_id=new_product.id, file_url=v_url, media_type='video', caption="Vidéo produit"))
 
     db.session.commit()
     return redirect('/admin')
@@ -291,31 +339,47 @@ def delete_promo(id):
     flash('Code promo supprimé !')
     return redirect(url_for('admin'))
 
-@app.route('/admin/update-product/<int:id>', methods=['POST'])
-def update_product(id):
+@app.route('/admin/edit-product/<int:id>', methods=['POST'])
+def edit_product(id):
     product = Product.query.get_or_404(id)
-    product.image_url = request.form.get('image_url', product.image_url)
+    
+    product.name = request.form.get('name', product.name)
     product.price = request.form.get('price', product.price)
     product.promo_info = request.form.get('promo_info', product.promo_info)
     product.options = request.form.get('options', product.options)
     product.description = request.form.get('description', product.description)
-    product.stock_qty = request.form.get('stock_qty', type=int) or product.stock_qty
+    product.stock_qty = int(request.form.get('stock_qty', product.stock_qty) or product.stock_qty)
     product.is_featured = True if request.form.get('is_featured') else False
     product.in_stock = True if request.form.get('in_stock') else False
+
+    image_file = request.files.get('image_file')
+    if image_file and image_file.filename != '':
+        filename = secure_filename(image_file.filename)
+        img_bytes = image_file.read()
+        if supabase:
+            path_on_storage = f"products/{datetime.utcnow().timestamp()}_{filename}"
+            supabase.storage.from_("tataw-media").upload(
+                path_on_storage, img_bytes, file_options={"content-type": image_file.content_type}
+            )
+            product.image_url = supabase.storage.from_("tataw-media").get_public_url(path_on_storage)
+        else:
+            upload_folder = 'static/uploads'
+            os.makedirs(upload_folder, exist_ok=True)
+            filepath = os.path.join(upload_folder, filename)
+            product.image_url = f"/{filepath}"
+
     db.session.commit()
-    flash('Produit mis à jour !')
+    flash('Article modifié avec succès !')
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-product/<int:id>', methods=['POST'])
 def delete_product(id):
-    product = Product.query.get_or_404(id)
-    # 1. Supprimer d'abord tous les médias liés à ce produit
     ProductMedia.query.filter_by(product_id=id).delete()
-    # 2. Supprimer ensuite le produit
+    product = Product.query.get_or_404(id)
     db.session.delete(product)
     db.session.commit()
     flash('Produit supprimé avec succès !')
-    return redirect(url_for('admin')) 
+    return redirect(url_for('admin'))
 
 # --- ROUTES RL & SONDAGE ---
 
@@ -380,30 +444,6 @@ def submit_poll_vote():
     db.session.add(vote)
     db.session.commit()
     return jsonify({'status': 'success', 'message': 'Vote enregistré avec succès'})
-import os
-from werkzeug.utils import secure_filename
-
-@app.route('/admin/edit-product/<int:id>', methods=['POST'])
-def edit_product(id):
-    product = Product.query.get_or_404(id)
-    
-    product.name = request.form.get('name', product.name)
-    product.price = request.form.get('price', product.price)
-    product.stock_qty = int(request.form.get('stock_qty', product.stock_qty))
-    
-    # Gestion du changement d'image
-    image_file = request.files.get('image_file')
-    if image_file and image_file.filename != '':
-        filename = secure_filename(image_file.filename)
-        upload_folder = 'static/uploads'
-        os.makedirs(upload_folder, exist_ok=True)
-        filepath = os.path.join(upload_folder, filename)
-        image_file.save(filepath)
-        product.image_url = f"/{filepath}"
-
-    db.session.commit()
-    flash('Article modifié avec succès !')
-    return redirect(url_for('admin'))
 
 if __name__ == '__main__':
     app.run(debug=True)

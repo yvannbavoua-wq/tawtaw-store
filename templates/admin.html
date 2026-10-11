@@ -40,19 +40,44 @@
       </div>
     </div>
 
-    <!-- FORMULAIRE DE CRÉATION DE PRODUIT -->
+    <!-- FORMULAIRE DE CRÉATION DE PRODUIT AVEC 3 IMAGES & DESCRIPTIONS ASSOCIÉES -->
     <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 mb-8 shadow-xl">
-      <h2 class="text-xs font-bold uppercase mb-4 text-gray-300">Ajouter un article</h2>
+      <h2 class="text-xs font-bold uppercase mb-4 text-gray-300">Ajouter un article (Multi-visuels & Descriptions)</h2>
       <form action="/admin/add-product" method="POST" enctype="multipart/form-data" class="space-y-3">
         <input type="text" name="name" placeholder="Nom du produit" required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         <div class="grid grid-cols-2 gap-3">
           <input type="text" name="category" placeholder="Catégorie (HOMME / FEMME / COSMETIQUES)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
           <input type="text" name="subcategory" placeholder="Sous-catégorie (ex: T-SHIRTS)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         </div>
-        <div>
-          <label class="block text-xs text-gray-400 mb-1">Photos du produit (sélectionnez plusieurs images) :</label>
-          <input type="file" name="photos" accept="image/*" multiple required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-gray-300">
+
+        <!-- ESPACE 3 IMAGES DISTINCTES ET LEURS DESCRIPTIONS -->
+        <div class="bg-gray-950 p-4 rounded-2xl border border-gray-800 space-y-3">
+          <label class="block text-xs font-bold text-red-500 uppercase">Visuels & Descriptions associées :</label>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <!-- Image 1 -->
+            <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 space-y-2">
+              <span class="text-[10px] font-bold text-gray-400 block uppercase">1ère Image (Principale)</span>
+              <input type="file" name="photos" accept="image/*" required class="w-full text-[10px] text-gray-300 bg-gray-950 p-2 rounded border border-gray-700">
+              <input type="text" name="captions" placeholder="Description (ex: Noir)" class="w-full text-[10px] bg-gray-950 p-2 rounded border border-gray-700 text-white">
+            </div>
+
+            <!-- Image 2 -->
+            <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 space-y-2">
+              <span class="text-[10px] font-bold text-gray-400 block uppercase">2ème Image</span>
+              <input type="file" name="photos" accept="image/*" class="w-full text-[10px] text-gray-300 bg-gray-950 p-2 rounded border border-gray-700">
+              <input type="text" name="captions" placeholder="Description (ex: Bleu)" class="w-full text-[10px] bg-gray-950 p-2 rounded border border-gray-700 text-white">
+            </div>
+
+            <!-- Image 3 -->
+            <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 space-y-2">
+              <span class="text-[10px] font-bold text-gray-400 block uppercase">3ème Image</span>
+              <input type="file" name="photos" accept="image/*" class="w-full text-[10px] text-gray-300 bg-gray-950 p-2 rounded border border-gray-700">
+              <input type="text" name="captions" placeholder="Description (ex: Violet)" class="w-full text-[10px] bg-gray-950 p-2 rounded border border-gray-700 text-white">
+            </div>
+          </div>
         </div>
+
         <div>
           <label class="block text-xs text-gray-400 mb-1">Vidéos du produit (optionnel) :</label>
           <input type="file" name="videos" accept="video/*" multiple class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-gray-300">
@@ -64,8 +89,8 @@
           <input type="number" name="stock_qty" placeholder="Quantité Stock (ex: 5)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         </div>
 
-        <input type="text" name="options" placeholder="Modèles/Tailles (ex: Noir, Blanc, Rose OU 39, 40)" class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
-        <textarea name="description" placeholder="Description courte du produit..." class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 h-20"></textarea>
+        <input type="text" name="options" placeholder="Modèles/Tailles (ex: Noir, Bleu, Violet)" class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+        <textarea name="description" placeholder="Description globale du produit..." class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 h-20"></textarea>
 
         <div class="grid grid-cols-2 gap-3 pt-2">
           <label class="flex items-center gap-2 bg-gray-950 p-3 rounded-xl border border-gray-800 cursor-pointer text-xs">
@@ -78,7 +103,7 @@
           </label>
         </div>
 
-        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 font-bold text-xs py-3.5 rounded-xl uppercase">Enregistrer l'article</button>
+        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 font-bold text-xs py-3.5 rounded-xl uppercase shadow">Enregistrer l'article Pro</button>
       </form>
     </div>
 
@@ -96,11 +121,11 @@
                 <button type="submit" class="text-red-500 hover:text-red-400 p-1">✕</button>
               </form>
             </div>
-            <p class="text-gray-400 mb-2 font-mono">{{ p.price }} FCFA (Stock: {{ p.stock_qty }})</p>
+            <p class="text-gray-400 mb-2 font-mono">{% if p.price %}{{ p.price }}{% else %}Sur demande{% endif %} FCFA (Stock: {{ p.stock_qty }})</p>
           </div>
         </div>
 
-        <!-- Formulaire unique de modification complet (Nom, Prix, Stock, Image) -->
+        <!-- Formulaire de modification -->
         <form action="{{ url_for('edit_product', id=p.id) }}" method="POST" enctype="multipart/form-data" class="bg-gray-800 p-3 rounded-xl space-y-2 border border-gray-700">
           <h4 class="text-[11px] font-black uppercase text-red-400">Modifier l'article</h4>
           
