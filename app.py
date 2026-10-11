@@ -5,7 +5,15 @@ from flask_sqlalchemy import SQLAlchemy
 from rl_agent import rl_agent
 from werkzeug.utils import secure_filename
 from google import genai
-from supabase import create_client, Client
+
+# Intégration sécurisée de Supabase pour éviter les plantages si le module n'est pas installé
+try:
+    from supabase import create_client, Client
+    SUPABASE_URL = os.environ.get("SUPABASE_URL")
+    SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
+except ImportError:
+    supabase = None
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'tataw_secret_key_change_in_production')
@@ -18,11 +26,6 @@ if db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
-# Initialisation de Supabase Storage pour persistance cloud des images
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
 # --- MODÈLES DE LA BASE DE DONNÉES ---
 
@@ -253,7 +256,6 @@ def add_product():
             file_bytes = photo.read()
             
             if supabase:
-                # Upload vers Supabase Storage pour persistance cloud
                 path_on_storage = f"products/{datetime.utcnow().timestamp()}_{filename}"
                 supabase.storage.from_("tataw-media").upload(
                     path_on_storage, 
@@ -289,11 +291,9 @@ def add_product():
     db.session.add(new_product)
     db.session.commit()
 
-    # Enregistrer toutes les photos avec leurs descriptions dans ProductMedia
     for url, mtype, cap in saved_media:
         db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type=mtype, caption=cap))
 
-    # Enregistrement des vidéos multiples
     for video in request.files.getlist('videos'):
         if video and video.filename != '':
             filename = secure_filename(video.filename)
