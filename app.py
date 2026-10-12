@@ -130,6 +130,11 @@ def notify_new_article(product):
 
 # --- ROUTES PRINCIPALES ---
 
+# Route de santé indispensable pour stopper l'écran de chargement en boucle
+@app.route('/api/ping')
+def ping():
+    return jsonify({'status': 'active'}), 200
+
 @app.route('/')
 def index():
     products = Product.query.all()
@@ -313,7 +318,6 @@ def add_product():
         flash(f"Erreur : {str(e)}")
         return redirect('/admin')
 
-# Route ajoutée pour correspondre au formulaire admin.html et éliminer l'erreur 500
 @app.route('/admin/edit-product/<int:id>', methods=['POST'])
 def edit_product(id):
     try:
