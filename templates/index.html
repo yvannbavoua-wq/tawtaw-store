@@ -16,6 +16,7 @@
 </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans min-h-screen flex flex-col pb-20 transition-colors duration-300">
+
 <!-- ÉCRAN DE CHARGEMENT / WAKE-UP SERVEUR -->
 <div id="serverWakeScreen" class="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-6 text-center text-white transition-opacity duration-700">
 <div class="max-w-md w-full bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-2xl">
@@ -26,22 +27,24 @@
 <div id="wakeTimer" class="text-[10px] font-mono text-yellow-400 font-bold">Connexion au serveur...</div>
 </div>
 </div>
+
 <!-- EN-TÊTE STYLE ALIBABA AVEC RECHERCHE VISUELLE PAR PHOTO -->
 <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40 px-4 py-3 shadow-sm">
 <div class="flex items-center justify-between gap-2 max-w-6xl mx-auto">
 <a href="/" class="flex items-center gap-2 flex-shrink-0">
 <img src="https://i.ibb.co/v66HHnLX/IMG-1652.jpg" alt="TATAW Logo" class="h-9 w-auto object-contain">
 </a>
+
 <!-- Barre de recherche globale + Upload Visuel -->
 <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 border border-gray-300 dark:border-gray-700 flex-grow max-w-md">
 <i class="fa-solid fa-magnifying-glass text-xs text-gray-400 mr-2"></i>
 <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Rechercher un article, style..." class="bg-transparent text-xs outline-none w-full dark:text-white">
-<!-- Bouton Photo / Recherche Visuelle -->
 <label for="visualSearchInput" class="cursor-pointer text-gray-500 hover:text-red-500 pl-2 border-l border-gray-300 dark:border-gray-700 ml-2" title="Recherche visuelle par photo">
 <i class="fa-solid fa-camera text-sm"></i>
 </label>
 <input type="file" id="visualSearchInput" accept="image/*" class="hidden" onchange="handleVisualSearch(event)">
 </div>
+
 <div class="flex items-center gap-2 flex-shrink-0">
 <button onclick="openSettingsModal()" class="p-1.5 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white" title="Paramètres">
 <i class="fa-solid fa-gear text-base"></i>
@@ -53,6 +56,7 @@
 </div>
 </div>
 </header>
+
 <!-- ONGLETS DE NAVIGATION PRINCIPAUX -->
 <div class="max-w-xl mx-auto mt-4 px-4 text-center">
 <div class="grid grid-cols-4 gap-1 bg-gray-200 dark:bg-gray-800 p-1 rounded-2xl">
@@ -62,18 +66,17 @@
 <button onclick="switchTab('bio')" id="tab-bio" class="py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all text-gray-600 dark:text-gray-400">📖 Histoire</button>
 </div>
 </div>
+
 <!-- SOUS-BARRE DES CATÉGORIES DÉFILANTE -->
 <div class="max-w-6xl mx-auto px-4 mt-3">
 <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
 <button onclick="filterCategory('ALL')" class="cat-pill bg-black dark:bg-white text-white dark:text-black text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap shadow-sm">All</button>
-<button onclick="filterCategory('Vehicles & Transportation')" class="cat-pill bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap">Vehicles & Transportation</button>
-<button onclick="filterCategory('Chemicals')" class="cat-pill bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap">Chemicals</button>
-<button onclick="filterCategory('Metals & Alloys')" class="cat-pill bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap">Metals & Alloys</button>
 <button onclick="filterCategory('HOMME')" class="cat-pill bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap">Homme</button>
 <button onclick="filterCategory('FEMME')" class="cat-pill bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap">Femme</button>
 <button onclick="filterCategory('COSMETIQUES')" class="cat-pill bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap">Cosmétiques</button>
 </div>
 </div>
+
 <!-- SECTION AI MODE & REINFORCEMENT LEARNING -->
 <div id="section-ai-mode" class="hidden max-w-4xl mx-auto px-4 my-6 w-full">
 <div class="bg-gradient-to-r from-red-900 via-gray-900 to-black p-6 rounded-3xl text-white shadow-xl border border-red-500/30">
@@ -81,7 +84,7 @@
 <i class="fa-solid fa-brain text-2xl text-red-500 animate-pulse"></i>
 <div>
 <h2 class="text-sm font-black uppercase tracking-wider">Moteur d'IA Autonome & Reinforcement Learning</h2>
-<p class="text-[10px] text-gray-300">Optimisé par MABwiser & Gemini Flash pour des recommandations ultra-précises.</p>
+<p class="text-[10px] text-gray-300">Optimisé par Gemini Flash pour des recommandations ultra-précises.</p>
 </div>
 </div>
 <div id="rlRecommendedContainer" class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -89,6 +92,7 @@
 </div>
 </div>
 </div>
+
 <!-- SECTION NOUVEAUTÉS -->
 <div id="section-news" class="hidden max-w-6xl mx-auto px-4 mb-6 w-full mt-4">
 <h2 class="text-sm font-black uppercase mb-3 text-red-500">🔥 NOUVEAUTÉS DE LA SEMAINE</h2>
@@ -103,6 +107,7 @@
 {% endfor %}
 </div>
 </div>
+
 <!-- SECTION NOTRE HISTOIRE -->
 <div id="section-bio" class="hidden max-w-2xl mx-auto my-8 p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-800 shadow-sm text-center">
 <span class="bg-red-100 text-red-600 text-[10px] font-black px-3 py-1 rounded-full uppercase">À propos de TATAW x OFFX</span>
@@ -112,6 +117,7 @@ Plateforme mobile commerce de pointe fondée à Yaoundé. Alliance parfaite entr
 </p>
 <button onclick="switchTab('articles')" class="bg-black text-white dark:bg-white dark:text-black text-xs font-bold py-2.5 px-6 rounded-xl uppercase shadow">Voir les Collections 🛒</button>
 </div>
+
 <!-- CATALOGUE PRINCIPAL -->
 <main id="section-articles" class="max-w-6xl mx-auto px-4 py-2 flex-grow w-full">
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -140,6 +146,7 @@ Plateforme mobile commerce de pointe fondée à Yaoundé. Alliance parfaite entr
 {% endif %}
 </div>
 {% endif %}
+
 <!-- SÉLECTEUR DE COULEURS DYNAMIQUE -->
 {% if product.options %}
 <div class="mb-3">
@@ -161,6 +168,7 @@ class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase 
 </select>
 </div>
 {% endif %}
+
 <div class="mt-auto pt-3 border-t border-gray-200 dark:border-gray-800 space-y-2">
 <div class="flex items-center justify-between">
 <span class="text-sm font-black text-gray-900 dark:text-white"><span class="product-price" data-price="{{ product.price }}">{% if product.price %}{{ product.price }}{% else %}Sur demande{% endif %}</span> FCFA</span>
@@ -177,6 +185,7 @@ class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase 
 {% endfor %}
 </div>
 </main>
+
 <!-- BARRE DE NAVIGATION INFÉRIEURE FIXE -->
 <div class="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-40 px-6 py-2.5 flex items-center justify-around shadow-lg">
 <a href="/" class="flex flex-col items-center text-red-600 text-xs font-bold">
@@ -192,6 +201,7 @@ class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase 
 <span>Mon Compte</span>
 </button>
 </div>
+
 <!-- WIDGET FLOATING IA STYLISTE -->
 <div class="fixed bottom-20 right-6 z-50">
 <button onclick="toggleAiChat()" class="bg-red-600 text-white font-bold p-3.5 rounded-full shadow-2xl hover:scale-105 transition flex items-center justify-center gap-2">
@@ -199,6 +209,7 @@ class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase 
 <span class="text-xs font-black uppercase hidden md:inline">Styliste IA</span>
 </button>
 </div>
+
 <!-- FENÊTRE DE CHAT IA -->
 <div id="aiChatWindow" class="hidden fixed bottom-32 right-6 w-80 md:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 flex flex-col overflow-hidden">
 <div class="bg-gradient-to-r from-red-600 to-black text-white p-3.5 flex items-center justify-between">
@@ -223,6 +234,7 @@ Bonjour ! Je suis votre conseiller style IA. Que recherchez-vous aujourd'hui ?
 </button>
 </div>
 </div>
+
 <!-- MODAL AUTHENTIFICATION -->
 <div id="authModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
 <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 max-w-sm w-full relative border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white shadow-2xl">
@@ -254,6 +266,7 @@ Bonjour ! Je suis votre conseiller style IA. Que recherchez-vous aujourd'hui ?
 </form>
 </div>
 </div>
+
 <!-- MODAL PARAMÈTRES -->
 <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
 <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full relative border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
@@ -275,6 +288,7 @@ Bonjour ! Je suis votre conseiller style IA. Que recherchez-vous aujourd'hui ?
 </div>
 </div>
 </div>
+
 <!-- PANIER SIDEBAR -->
 <div id="cartSidebar" class="fixed inset-y-0 right-0 w-80 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 p-4 flex flex-col">
 <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
@@ -302,66 +316,73 @@ Bonjour ! Je suis votre conseiller style IA. Que recherchez-vous aujourd'hui ?
 <i class="fa-brands fa-whatsapp text-lg"></i> Commander sur WhatsApp
 </button>
 </div>
+
 <!-- SCRIPTS JAVASCRIPT -->
 <script>
 async function checkServerAwake() {
-const wakeScreen = document.getElementById('serverWakeScreen');
-const wakeTimer = document.getElementById('wakeTimer');
-let secondsWaited = 0;
-const timer = setInterval(() => {
-secondsWaited++;
-wakeTimer.innerText = ⁠Temps d'attente : ${secondsWaited}s...⁠;
-}, 1000);
-while (true) {
-try {
-const res = await fetch('/api/ping');
-if (res.ok) {
-clearInterval(timer);
-wakeScreen.style.opacity = '0';
-setTimeout(() => wakeScreen.classList.add('hidden'), 700);
-fetchRlRecommendations();
-break;
-}
-} catch (e) {}
-await new Promise(r => setTimeout(r, 2000));
-}
+  const wakeScreen = document.getElementById('serverWakeScreen');
+  const wakeTimer = document.getElementById('wakeTimer');
+  let secondsWaited = 0;
+  const timer = setInterval(() => {
+    secondsWaited++;
+    wakeTimer.innerText = `Temps d'attente : ${secondsWaited}s...`;
+  }, 1000);
+
+  while (true) {
+    try {
+      const res = await fetch('/api/ping');
+      if (res.ok) {
+        clearInterval(timer);
+        wakeScreen.style.opacity = '0';
+        setTimeout(() => wakeScreen.classList.add('hidden'), 700);
+        fetchRlRecommendations();
+        break;
+      }
+    } catch (e) {}
+    await new Promise(r => setTimeout(r, 2000));
+  }
 }
 checkServerAwake();
+
 let cart = JSON.parse(localStorage.getItem('tataw_cart')) || [];
 let isDarkMode = localStorage.getItem('tataw_dark') === 'true';
 if (isDarkMode) document.documentElement.classList.add('dark');
 renderCart();
+
 function toggleDarkMode() {
-isDarkMode = !isDarkMode;
-localStorage.setItem('tataw_dark', isDarkMode);
-document.documentElement.classList.toggle('dark', isDarkMode);
+  isDarkMode = !isDarkMode;
+  localStorage.setItem('tataw_dark', isDarkMode);
+  document.documentElement.classList.toggle('dark', isDarkMode);
 }
+
 function switchTab(tab) {
-['ai-mode', 'news', 'articles', 'bio'].forEach(t => {
-const sec = document.getElementById(⁠section-${t}⁠);
-if(sec) sec.classList.add('hidden');
-const btn = document.getElementById(⁠tab-${t}⁠);
-if(btn) btn.className = "py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all text-gray-600 dark:text-gray-400";
-});
-const targetSec = document.getElementById(⁠section-${tab}⁠);
-if(targetSec) targetSec.classList.remove('hidden');
-const targetBtn = document.getElementById(⁠tab-${tab}⁠);
-if(targetBtn) targetBtn.className = "py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all bg-black text-white dark:bg-white dark:text-black shadow";
+  ['ai-mode', 'news', 'articles', 'bio'].forEach(t => {
+    const sec = document.getElementById(`section-${t}`);
+    if(sec) sec.classList.add('hidden');
+    const btn = document.getElementById(`tab-${t}`);
+    if(btn) btn.className = "py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all text-gray-600 dark:text-gray-400";
+  });
+  const targetSec = document.getElementById(`section-${tab}`);
+  if(targetSec) targetSec.classList.remove('hidden');
+  const targetBtn = document.getElementById(`tab-${tab}`);
+  if(targetBtn) targetBtn.className = "py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all bg-black text-white dark:bg-white dark:text-black shadow";
 }
+
 function toggleDescription(id) {
-const shortDesc = document.getElementById(⁠desc-short-${id}⁠);
-const fullDesc = document.getElementById(⁠desc-full-${id}⁠);
-const btn = document.getElementById(⁠desc-btn-${id}⁠);
-if (fullDesc.classList.contains('hidden')) {
-fullDesc.classList.remove('hidden');
-shortDesc.classList.add('hidden');
-btn.innerText = "Réduire";
-} else {
-fullDesc.classList.add('hidden');
-shortDesc.classList.remove('hidden');
-btn.innerText = "Lire la suite";
+  const shortDesc = document.getElementById(`desc-short-${id}`);
+  const fullDesc = document.getElementById(`desc-full-${id}`);
+  const btn = document.getElementById(`desc-btn-${id}`);
+  if (fullDesc.classList.contains('hidden')) {
+    fullDesc.classList.remove('hidden');
+    shortDesc.classList.add('hidden');
+    btn.innerText = "Réduire";
+  } else {
+    fullDesc.classList.add('hidden');
+    shortDesc.classList.remove('hidden');
+    btn.innerText = "Lire la suite";
+  }
 }
-}
+
 function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
 function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
 function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
@@ -369,111 +390,119 @@ function closeAuthModal() { document.getElementById('authModal').classList.add('
 function setLoginMethod(method) { document.getElementById('loginMethodInput').value = method; }
 function toggleCart() { document.getElementById('cartSidebar').classList.toggle('translate-x-full'); }
 function toggleAiChat() { document.getElementById('aiChatWindow').classList.toggle('hidden'); }
+
 function selectProductOption(productId, optionValue, imageUrl) {
-const selectElem = document.getElementById(⁠option-${productId}⁠);
-if (selectElem) selectElem.value = optionValue;
-if (imageUrl) {
-const mainImg = document.getElementById(⁠main-img-${productId}⁠);
-if (mainImg) mainImg.src = imageUrl;
+  const selectElem = document.getElementById(`option-${productId}`);
+  if (selectElem) selectElem.value = optionValue;
+  if (imageUrl) {
+    const mainImg = document.getElementById(`main-img-${productId}`);
+    if (mainImg) mainImg.src = imageUrl;
+  }
 }
-}
+
 function changeCurrency() {
-const cur = document.getElementById('currencySelect').value;
-document.querySelectorAll('.product-price').forEach(el => {
-let val = el.dataset.price;
-if(!val) return;
-if(cur === 'EUR') el.innerText = (parseInt(val) / 655.957).toFixed(1) + " €";
-else if(cur === 'USD') el.innerText = (parseInt(val) / 600).toFixed(1) + " $";
-else el.innerText = val;
-});
+  const cur = document.getElementById('currencySelect').value;
+  document.querySelectorAll('.product-price').forEach(el => {
+    let val = el.dataset.price;
+    if(!val) return;
+    if(cur === 'EUR') el.innerText = (parseInt(val) / 655.957).toFixed(1) + " €";
+    else if(cur === 'USD') el.innerText = (parseInt(val) / 600).toFixed(1) + " $";
+    else el.innerText = val;
+  });
 }
+
 async function fetchRlRecommendations() {
-try {
-const res = await fetch('/api/rl/recommend', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ user_id: 'user_session', category: 'ALL' })
-});
-const data = await res.json();
-if (data.recommended_product_id) {
-// Produit RL disponible
+  try {
+    const res = await fetch('/api/rl/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: 'user_session', category: 'ALL' })
+    });
+    await res.json();
+  } catch (e) {}
 }
-} catch (e) {}
-}
+
 async function handleVisualSearch(event) {
-const file = event.target.files[0];
-if (!file) return;
-const formData = new FormData();
-formData.append('file', file);
-alert("Analyse visuelle par IA en cours...");
-try {
-const res = await fetch('/api/visual-search', { method: 'POST', body: formData });
-const data = await res.json();
-if (data.analysis) {
-alert("Résultat analyse visuelle : " + data.analysis);
+  const file = event.target.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  alert("Analyse visuelle par IA en cours...");
+  try {
+    const res = await fetch('/api/visual-search', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.analysis) {
+      alert("Résultat analyse visuelle : " + data.analysis);
+    }
+  } catch (e) {
+    alert("Erreur lors de l'analyse visuelle.");
+  }
 }
-} catch (e) {
-alert("Erreur lors de l'analyse visuelle.");
-}
-}
+
 async function sendAiMessage() {
-const input = document.getElementById('aiInput');
-const text = input.value.trim();
-if (!text) return;
-const chatBox = document.getElementById('aiMessages');
-chatBox.innerHTML += ⁠<div class="bg-black text-white p-2 rounded-xl ml-auto max-w-[80%] text-right">${text}</div>⁠;
-input.value = '';
-try {
-const res = await fetch('/api/ai-assistant', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ message: text })
-});
-const data = await res.json();
-chatBox.innerHTML += ⁠<div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2">${data.reply}</div>⁠;
-} catch (e) {}
-chatBox.scrollTop = chatBox.scrollHeight;
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const chatBox = document.getElementById('aiMessages');
+  chatBox.innerHTML += `<div class="bg-black text-white p-2 rounded-xl ml-auto max-w-[80%] text-right">${text}</div>`;
+  input.value = '';
+  try {
+    const res = await fetch('/api/ai-assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2">${data.reply}</div>`;
+  } catch (e) {}
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
+
 function addToCart(id, name, price) {
-const optElem = document.getElementById(⁠option-${id}⁠);
-const selectedOption = optElem ? optElem.value : 'Standard';
-cart.push({ id, name, price, option: selectedOption });
-localStorage.setItem('tataw_cart', JSON.stringify(cart));
-renderCart();
+  const optElem = document.getElementById(`option-${id}`);
+  const selectedOption = optElem ? optElem.value : 'Standard';
+  cart.push({ id, name, price, option: selectedOption });
+  localStorage.setItem('tataw_cart', JSON.stringify(cart));
+  renderCart();
 }
+
 function renderCart() {
-document.getElementById('cart-count').innerText = cart.length;
-const itemsContainer = document.getElementById('cart-items');
-let subtotal = 0;
-itemsContainer.innerHTML = cart.map((item, i) => {
-let numPrice = parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0;
-subtotal += numPrice;
-return ⁠<div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl"><div><p class="font-bold">${item.name} (${item.option})</p><p class="text-red-600">${item.price} FCFA</p></div><button onclick="cart.splice(${i},1);localStorage.setItem('tataw_cart',JSON.stringify(cart));renderCart();" class="text-red-500 font-bold">✕</button></div>⁠;
-}).join('');
-const shippingCost = parseInt(document.getElementById('shippingCity').value) || 0;
-document.getElementById('cart-subtotal').innerText = subtotal.toLocaleString() + " FCFA";
-document.getElementById('cart-shipping').innerText = shippingCost.toLocaleString() + " FCFA";
-document.getElementById('cart-total').innerText = (subtotal + shippingCost).toLocaleString() + " FCFA";
+  document.getElementById('cart-count').innerText = cart.length;
+  const itemsContainer = document.getElementById('cart-items');
+  let subtotal = 0;
+  itemsContainer.innerHTML = cart.map((item, i) => {
+    let numPrice = parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0;
+    subtotal += numPrice;
+    return `<div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl"><div><p class="font-bold">${item.name} (${item.option})</p><p class="text-red-600">${item.price} FCFA</p></div><button onclick="cart.splice(${i},1);localStorage.setItem('tataw_cart',JSON.stringify(cart));renderCart();" class="text-red-500 font-bold">✕</button></div>`;
+  }).join('');
+  const shippingCost = parseInt(document.getElementById('shippingCity').value) || 0;
+  document.getElementById('cart-subtotal').innerText = subtotal.toLocaleString() + " FCFA";
+  document.getElementById('cart-shipping').innerText = shippingCost.toLocaleString() + " FCFA";
+  document.getElementById('cart-total').innerText = (subtotal + shippingCost).toLocaleString() + " FCFA";
 }
+
 function buyNowOneClick(name, price) {
-window.open(⁠https://wa.me/237653848517?text=Bonjour,%20achat%20rapide%20de%20*%20${name}%20* (${price} FCFA)⁠, '_blank');
+  window.open(`https://wa.me/237653848517?text=Bonjour,%20achat%20rapide%20de%20*${name}*%20(${price}%20FCFA)`, '_blank');
 }
+
 function sendWhatsAppOrder() {
-if (cart.length === 0) return alert("Votre panier est vide !");
-let msg = "Bonjour TATAW x OFFX ! 👋%0AJ'aimerais passer une commande :%0A" + cart.map(i => ⁠- ${i.name} (${i.option}) : ${i.price} FCFA⁠).join('%0A');
-window.open(⁠https://wa.me/237653848517?text=${msg}⁠, '_blank');
+  if (cart.length === 0) return alert("Votre panier est vide !");
+  let msg = "Bonjour TATAW x OFFX ! 👋%0AJ'aimerais passer une commande :%0A" + cart.map(i => `- ${i.name} (${i.option}) : ${i.price} FCFA`).join('%0A');
+  window.open(`https://wa.me/237653848517?text=${msg}`, '_blank');
 }
+
 function filterCategory(cat) {
-document.querySelectorAll('.product-card').forEach(card => {
-card.classList.toggle('hidden', cat !== 'ALL' && !card.dataset.category.includes(cat));
-});
+  document.querySelectorAll('.product-card').forEach(card => {
+    card.classList.toggle('hidden', cat !== 'ALL' && !card.dataset.category.includes(cat));
+  });
 }
+
 function filterProducts() {
-const q = document.getElementById('searchInput').value.toLowerCase();
-document.querySelectorAll('.product-card').forEach(card => {
-const match = card.dataset.name.includes(q) || card.dataset.description.includes(q);
-card.classList.toggle('hidden', !match);
-});
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('.product-card').forEach(card => {
+    const match = card.dataset.name.includes(q) || card.dataset.description.includes(q);
+    card.classList.toggle('hidden', !match);
+  });
 }
 </script>
 </body>

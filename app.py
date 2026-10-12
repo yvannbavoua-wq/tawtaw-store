@@ -42,7 +42,7 @@ class Product(db.Model):
     image_url = db.Column(db.Text, nullable=False)
     price = db.Column(db.String(50), nullable=True)
     promo_info = db.Column(db.String(100), nullable=True)
-    options = db.Column(db.String(200), nullable=True) # Ex: Noir, Blanc, Bleu
+    options = db.Column(db.String(200), nullable=True)
     description = db.Column(db.Text, nullable=True)
     is_featured = db.Column(db.Boolean, default=False)
     in_stock = db.Column(db.Boolean, default=True)
@@ -68,7 +68,7 @@ class User(db.Model):
     username = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)
     phone = db.Column(db.String(30), unique=True, nullable=False)
-    login_method = db.Column(db.String(30), default='whatsapp') # whatsapp, google, email
+    login_method = db.Column(db.String(30), default='whatsapp')
     country = db.Column(db.String(50), nullable=True)
     city = db.Column(db.String(50), nullable=True)
     is_verified = db.Column(db.Boolean, default=True)
@@ -93,7 +93,7 @@ with app.app_context():
     if not Product.query.first():
         default_p = Product(
             name="Tawtaw t-shirt Streetwear",
-            category="Vehicles & Transportation",
+            category="HOMME",
             subcategory="T-SHIRTS",
             image_url="https://i.ibb.co/SXHNbgRS/Photoroom-20261006-212634.jpg",
             price="6000",
@@ -107,15 +107,12 @@ with app.app_context():
         db.session.add(default_p)
         db.session.commit()
 
-# --- FONCTION UTILITAIRE NOTIFICATIONS RESEND & WHATSAPP ---
+# --- NOTIFICATIONS ---
 
 def notify_new_article(product):
-    """Envoie une notification automatique par e-mail via Resend aux abonnés et simule le webhook WhatsApp."""
     try:
-        # Envoi d'e-mail via l'API Resend
         users = User.query.filter(User.email.isnot(None)).all()
         emails = [u.email for u in users if u.email]
-        
         if emails and RESEND_API_KEY:
             headers = {
                 "Authorization": f"Bearer {RESEND_API_KEY}",
@@ -140,7 +137,6 @@ def index():
     user = User.query.get(session.get('user_id')) if session.get('user_id') else None
     return render_template('index.html', products=products, featured_products=featured_products, user=user, whatsapp_link=WHATSAPP_GROUP_LINK)
 
-# Initialisation Gemini API
 client = genai.Client()
 
 @app.route('/api/ai-assistant', methods=['POST'])
@@ -195,7 +191,6 @@ def ai_assistant():
 
 @app.route('/api/visual-search', methods=['POST'])
 def visual_search():
-    """Recherche visuelle par photo via Gemini Vision"""
     if 'file' not in request.files:
         return jsonify({'error': 'Aucune image envoyée'}), 400
     file = request.files['file']
@@ -208,7 +203,7 @@ def visual_search():
             model='gemini-2.5-flash',
             contents=[
                 image_bytes,
-                "Analyse cette image de vêtement/accessoire et identifie le style dominant, la couleur principale et la catégorie correspondante (ex: T-SHIRTS, CHAUSSURES, ACCESSOIRES). Réponds uniquement au format JSON strict avec les clés: 'category', 'keywords'."
+                "Analyse cette image de vêtement/accessoire et identifie le style dominant, la couleur principale et la catégorie correspondante. Réponds uniquement au format JSON strict avec les clés: 'category', 'keywords'."
             ]
         )
         return jsonify({'status': 'success', 'analysis': response.text})
@@ -217,7 +212,6 @@ def visual_search():
 
 @app.route('/login-auth', methods=['POST'])
 def login_auth():
-    """Gère l'authentification unifiée (Google, WhatsApp, E-mail)"""
     username = request.form.get('username')
     phone = request.form.get('phone')
     email = request.form.get('email')
@@ -293,7 +287,7 @@ def add_product():
         stock_qty = int(request.form.get('stock_qty') or 5)
         new_product = Product(
             name=request.form['name'],
-            category=request.form.get('category', 'All'),
+            category=request.form.get('category', 'HOMME'),
             subcategory=request.form.get('subcategory', 'GENERAL'),
             price=request.form['price'],
             promo_info=request.form.get('promo_info', ''),
@@ -301,7 +295,7 @@ def add_product():
             options=request.form.get('options', 'Noir, Blanc'),
             description=request.form.get('description', ''),
             is_featured=True if request.form.get('is_featured') else False,
-            in_stock=True if stock_qty > 0 else False, # Correction robuste du stock
+            in_stock=True if stock_qty > 0 else False,
             image_url=first_image_url
         )
         db.session.add(new_product)
@@ -311,13 +305,49 @@ def add_product():
             db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type=mtype))
         db.session.commit()
 
-        # Déclenchement automatique des notifications Resend & WhatsApp
         notify_new_article(new_product)
 
-        flash("Article ajouté et diffusé sur WhatsApp/E-mail avec succès !")
+        flash("Article ajouté avec succès !")
         return redirect('/admin')
     except Exception as e:
         flash(f"Erreur : {str(e)}")
+        return redirect('/admin')
+
+# Route ajoutée pour correspondre au formulaire admin.html et éliminer l'erreur 500
+@app.route('/admin/edit-product/<int:id>', methods=['POST'])
+def edit_product(id):
+    try:
+        product = Product.query.get_or_404(id)
+        product.name = request.form.get('name', product.name)
+        product.price = request.form.get('price', product.price)
+        product.stock_qty = int(request.form.get('stock_qty') or product.stock_qty)
+        product.in_stock = True if product.stock_qty > 0 else False
+
+        image_file = request.files.get('image_file')
+        if image_file and image_file.filename != '':
+            filename = secure_filename(image_file.filename)
+            file_bytes = image_file.read()
+            url = ''
+            if supabase:
+                try:
+                    path_on_storage = f"products/{datetime.utcnow().timestamp()}_{filename}"
+                    supabase.storage.from_("tataw-media").upload(path_on_storage, file_bytes, file_options={"content-type": image_file.content_type})
+                    url = supabase.storage.from_("tataw-media").get_public_url(path_on_storage)
+                except Exception:
+                    pass
+            if not url:
+                os.makedirs('static/uploads', exist_ok=True)
+                filepath = os.path.join('static/uploads', filename)
+                image_file.seek(0)
+                image_file.save(filepath)
+                url = f'/{filepath}'
+            product.image_url = url
+
+        db.session.commit()
+        flash("Article mis à jour avec succès !")
+        return redirect('/admin')
+    except Exception as e:
+        flash(f"Erreur lors de la modification : {str(e)}")
         return redirect('/admin')
 
 @app.route('/admin/delete-product/<int:id>', methods=['POST'])
@@ -328,6 +358,30 @@ def delete_product(id):
     db.session.commit()
     flash('Produit supprimé !')
     return redirect(url_for('admin'))
+
+@app.route('/admin/add-promo', methods=['POST'])
+def add_promo():
+    try:
+        code = request.form.get('code', '').strip().upper()
+        discount = int(request.form.get('discount') or 10)
+        influencer = request.form.get('influencer', '')
+        if code:
+            new_promo = PromoCode(code=code, discount_percent=discount, influencer_name=influencer)
+            db.session.add(new_promo)
+            db.session.commit()
+            flash("Code promo ajouté !")
+        return redirect('/admin')
+    except Exception as e:
+        flash(f"Erreur promo: {str(e)}")
+        return redirect('/admin')
+
+@app.route('/admin/delete-promo/<int:id>', methods=['POST'])
+def delete_promo(id):
+    promo = PromoCode.query.get_or_404(id)
+    db.session.delete(promo)
+    db.session.commit()
+    flash("Code promo supprimé !")
+    return redirect('/admin')
 
 # --- REINFORCEMENT LEARNING ---
 
