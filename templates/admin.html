@@ -136,8 +136,8 @@
           </div>
         </div>
 
-        <!-- Formulaire de modification -->
-        <form action="{{ url_for('edit_product', id=p.id) }}" method="POST" enctype="multipart/form-data" class="bg-gray-800 p-3 rounded-xl space-y-2 border border-gray-700">
+        <!-- Formulaire de modification corrigé -->
+        <form action="/admin/edit-product/{{ p.id }}" method="POST" enctype="multipart/form-data" class="bg-gray-800 p-3 rounded-xl space-y-2 border border-gray-700">
           <h4 class="text-[11px] font-black uppercase text-red-400">Modifier l'article</h4>
           
           <div>
