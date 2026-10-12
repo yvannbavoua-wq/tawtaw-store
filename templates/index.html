@@ -77,18 +77,42 @@
 </div>
 </div>
 
-<!-- SECTION AI MODE & REINFORCEMENT LEARNING -->
+<!-- SECTION AI MODE UNIQUE & COMPLET -->
 <div id="section-ai-mode" class="hidden max-w-4xl mx-auto px-4 my-6 w-full">
-<div class="bg-gradient-to-r from-red-900 via-gray-900 to-black p-6 rounded-3xl text-white shadow-xl border border-red-500/30">
-<div class="flex items-center gap-3 mb-4">
-<i class="fa-solid fa-brain text-2xl text-red-500 animate-pulse"></i>
+<div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-xl overflow-hidden flex flex-col h-[550px]">
+<!-- En-tête AI Mode -->
+<div class="bg-gradient-to-r from-red-600 to-black text-white p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-brain text-2xl text-red-400 animate-pulse"></i>
 <div>
-<h2 class="text-sm font-black uppercase tracking-wider">Moteur d'IA Autonome & Reinforcement Learning</h2>
-<p class="text-[10px] text-gray-300">Optimisé par Gemini Flash pour des recommandations ultra-précises.</p>
+<h2 class="text-xs font-black uppercase tracking-wider">Cerveau Autonome TATAW x OFFX</h2>
+<p class="text-[10px] text-gray-300">Multilingue • Analyse de fichiers & Vocale • Génération d'images (Max 5/jour)</p>
 </div>
 </div>
-<div id="rlRecommendedContainer" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-<!-- Chargé dynamiquement par RL -->
+</div>
+
+<!-- Boîte de discussion AI Mode -->
+<div id="aiMessages" class="p-4 flex-grow overflow-y-auto space-y-3 text-xs">
+<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%]">
+Yo ! Bienvenue dans l'espace IA de TATAW x OFFX. Posez vos questions, envoyez une image, un fichier ou un message vocal, ou demandez la création d'un visuel streetwear !
+</div>
+</div>
+
+<!-- Barre d'outils et saisie AI Mode -->
+<div class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex items-center gap-2">
+<!-- Bouton Téléversement Fichier / Image / Audio -->
+<label class="cursor-pointer p-2.5 bg-gray-200 dark:bg-gray-800 rounded-xl text-gray-700 dark:text-gray-300 hover:text-red-600 transition" title="Envoyer une image, un fichier ou un vocal">
+<i class="fa-solid fa-paperclip text-sm"></i>
+<input type="file" id="aiFileInput" class="hidden" onchange="uploadFileToAi(event)">
+</label>
+
+<!-- Champ texte -->
+<input type="text" id="aiInput" placeholder="Posez votre question ou tapez /image [description]..." class="flex-grow text-xs p-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 outline-none dark:text-white" onkeypress="if(event.key==='Enter') sendAiMessage()">
+
+<!-- Bouton Envoyer -->
+<button onclick="sendAiMessage()" class="bg-black dark:bg-white text-white dark:text-black font-bold px-4 py-3 rounded-xl text-xs uppercase shadow">
+<i class="fa-solid fa-paper-plane"></i>
+</button>
 </div>
 </div>
 </div>
@@ -202,39 +226,6 @@ class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase 
 </button>
 </div>
 
-<!-- WIDGET FLOATING IA STYLISTE -->
-<div class="fixed bottom-20 right-6 z-50">
-<button onclick="toggleAiChat()" class="bg-red-600 text-white font-bold p-3.5 rounded-full shadow-2xl hover:scale-105 transition flex items-center justify-center gap-2">
-<i class="fa-solid fa-robot text-lg"></i>
-<span class="text-xs font-black uppercase hidden md:inline">Styliste IA</span>
-</button>
-</div>
-
-<!-- FENÊTRE DE CHAT IA -->
-<div id="aiChatWindow" class="hidden fixed bottom-32 right-6 w-80 md:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 flex flex-col overflow-hidden">
-<div class="bg-gradient-to-r from-red-600 to-black text-white p-3.5 flex items-center justify-between">
-<div class="flex items-center gap-2">
-<i class="fa-solid fa-robot text-lg"></i>
-<div>
-<h4 class="text-xs font-black uppercase">STYLISTE IA TATAW</h4>
-<p class="text-[9px] text-gray-300">Conseil & Recommandation Look</p>
-</div>
-</div>
-<button onclick="toggleAiChat()" class="text-white font-bold text-sm">✕</button>
-</div>
-<div id="aiMessages" class="p-3 h-64 overflow-y-auto space-y-2 text-xs">
-<div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%]">
-Bonjour ! Je suis votre conseiller style IA. Que recherchez-vous aujourd'hui ?
-</div>
-</div>
-<div class="p-2 border-t border-gray-200 dark:border-gray-800 flex gap-1.5 bg-gray-50 dark:bg-gray-950 items-center">
-<input type="text" id="aiInput" placeholder="Ex: Propose-moi une tenue..." class="flex-grow text-xs p-2 rounded-xl border dark:border-gray-700 dark:bg-gray-800 dark:text-white outline-none" onkeypress="if(event.key==='Enter') sendAiMessage()">
-<button onclick="sendAiMessage()" class="bg-black dark:bg-white text-white dark:text-black font-bold px-3 py-2 rounded-xl text-xs">
-<i class="fa-solid fa-paper-plane"></i>
-</button>
-</div>
-</div>
-
 <!-- MODAL AUTHENTIFICATION -->
 <div id="authModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
 <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 max-w-sm w-full relative border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white shadow-2xl">
@@ -335,7 +326,6 @@ async function checkServerAwake() {
         clearInterval(timer);
         wakeScreen.style.opacity = '0';
         setTimeout(() => wakeScreen.classList.add('hidden'), 700);
-        fetchRlRecommendations();
         break;
       }
     } catch (e) {}
@@ -389,7 +379,6 @@ function openAuthModal() { document.getElementById('authModal').classList.remove
 function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
 function setLoginMethod(method) { document.getElementById('loginMethodInput').value = method; }
 function toggleCart() { document.getElementById('cartSidebar').classList.toggle('translate-x-full'); }
-function toggleAiChat() { document.getElementById('aiChatWindow').classList.toggle('hidden'); }
 
 function selectProductOption(productId, optionValue, imageUrl) {
   const selectElem = document.getElementById(`option-${productId}`);
@@ -411,17 +400,6 @@ function changeCurrency() {
   });
 }
 
-async function fetchRlRecommendations() {
-  try {
-    const res = await fetch('/api/rl/recommend', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: 'user_session', category: 'ALL' })
-    });
-    await res.json();
-  } catch (e) {}
-}
-
 async function handleVisualSearch(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -439,22 +417,73 @@ async function handleVisualSearch(event) {
   }
 }
 
+// Gestion de l'AI Mode (Texte, Génération d'images avec quota, Fichiers, Vocaux)
 async function sendAiMessage() {
   const input = document.getElementById('aiInput');
   const text = input.value.trim();
   if (!text) return;
   const chatBox = document.getElementById('aiMessages');
-  chatBox.innerHTML += `<div class="bg-black text-white p-2 rounded-xl ml-auto max-w-[80%] text-right">${text}</div>`;
+  chatBox.innerHTML += `<div class="bg-black text-white p-2.5 rounded-2xl ml-auto max-w-[80%] text-right">${text}</div>`;
   input.value = '';
+
+  // Vérifier si c'est une demande de génération d'image
+  if (text.startsWith('/image ')) {
+    const prompt = text.replace('/image ', '');
+    try {
+      const res = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: prompt })
+      });
+      const data = await res.json();
+      if (res.status === 429) {
+        chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2 font-bold">${data.error}</div>`;
+      } else if (data.result) {
+        chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2"><strong>Visuel généré (${data.quota_used}/${data.quota_max} aujourd'hui) :</strong><br>${data.result}</div>`;
+      }
+    } catch (e) {
+      chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2">Erreur lors de la génération de l'image.</div>`;
+    }
+  } else {
+    try {
+      const res = await fetch('/api/ai-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2">${data.reply}</div>`;
+    } catch (e) {
+      chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2">Erreur de communication avec le cerveau TATAW.</div>`;
+    }
+  }
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Téléversement de fichiers / images / audios dans AI Mode
+async function uploadFileToAi(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const chatBox = document.getElementById('aiMessages');
+  chatBox.innerHTML += `<div class="bg-gray-200 dark:bg-gray-800 p-2.5 rounded-2xl text-gray-500 italic max-w-[80%]">Analyse du fichier/audio par l'IA en cours...</div>`;
+
   try {
-    const res = await fetch('/api/ai-assistant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
-    });
+    const res = await fetch('/api/analyze-file', { method: 'POST', body: formData });
     const data = await res.json();
-    chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2">${data.reply}</div>`;
-  } catch (e) {}
+    if (data.analysis) {
+      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2"><strong>Analyse Image :</strong><br>${data.analysis}</div>`;
+    } else if (data.transcription_and_reply) {
+      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2"><strong>Transcription & Réponse Vocale :</strong><br>${data.transcription_and_reply}</div>`;
+    } else if (data.error) {
+      chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2">${data.error}</div>`;
+    }
+  } catch (e) {
+    chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2">Erreur lors de l'envoi du fichier.</div>`;
+  }
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 

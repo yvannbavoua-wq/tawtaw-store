@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from rl_agent import rl_agent
 from werkzeug.utils import secure_filename
 from google import genai
+from tataw_ai_memory import tataw_brain
 
 # Intégration sécurisée de Supabase
 try:
@@ -106,6 +107,12 @@ with app.app_context():
         )
         db.session.add(default_p)
         db.session.commit()
+    
+    # Synchronisation automatique du catalogue dans la mémoire vectorielle de l'IA TATAW
+    all_products = Product.query.all()
+    for p in all_products:
+        info = f"Produit ID {p.id}: {p.name}, Catégorie: {p.category} ({p.subcategory}), Prix: {p.price} FCFA, Options: {p.options}, Description: {p.description}"
+        tataw_brain.add_knowledge(doc_id=f"prod_{p.id}", text_content=info, metadata={"type": "product", "id": p.id})
 
 # --- NOTIFICATIONS ---
 
@@ -130,7 +137,6 @@ def notify_new_article(product):
 
 # --- ROUTES PRINCIPALES ---
 
-# Route de santé indispensable pour stopper l'écran de chargement en boucle
 @app.route('/api/ping')
 def ping():
     return jsonify({'status': 'active'}), 200
@@ -150,68 +156,75 @@ def ai_assistant():
     user_msg = data.get('message', '').strip()
 
     if not user_msg:
-        return jsonify({'reply': 'Bonjour ! Comment puis-je vous aider aujourd’hui chez TATAW x OFFX ?', 'products': []})
+        return jsonify({'reply': 'Bonjour ! Bienvenue chez TATAW x OFFX. Comment puis-je vous aider ?', 'products': []})
 
-    all_products = Product.query.filter_by(in_stock=True).all()
-    catalog_info = "\n".join([
-        f"- [ID: {p.id}] {p.name} | Catégorie: {p.category} | Prix: {p.price} FCFA | Options: {p.options or 'Standard'}"
-        for p in all_products
-    ])
+    # Recherche exclusive dans la base vectorielle de TATAW
+    relevant_docs = tataw_brain.query_knowledge(user_msg, n_results=3)
+    context_knowledge = "\n".join(relevant_docs) if relevant_docs else "Aucun article spécifique trouvé dans le catalogue."
 
     system_prompt = f"""
-    Tu es le Styliste IA officiel et conseiller de mode personnel pour la marque streetwear TATAW x OFFX.
-    Réponds de manière humaine, chaleureuse et professionnelle.
-    CATALOGUE ACTUEL :
-    {catalog_info}
-    À la fin de ta réponse, si tu recommandes des articles, indique leurs IDs sous la forme [RECOMMEND: id1, id2].
+    Tu es l'Assistant IA Exclusif et Ambassadeur de Marque pour TATAW x OFFX (Yaoundé / Douala).
+    
+    DIRECTIVES STRICTES :
+    1. LANGUE : Détecte la langue du client (Français, Anglais, Pidgin, etc.) et réponds TOUJOURS dans cette MÊME langue.
+    2. SALUTATIONS : Réponds chaleureusement aux salutations (Bonjour, Bonsoir, Hello, etc.) selon la langue.
+    3. HORS-SUJET : Si la question n'a aucun rapport avec TATAW x OFFX, la mode, les vêtements, les cosmétiques ou le shopping, salue poliment mais rappelle que tu es spécialisé uniquement dans l'univers TATAW x OFFX.
+    4. CATALOGUE TATAW : Base tes réponses uniquement sur ces informations :
+    {context_knowledge}
     """
 
     try:
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=f"{system_prompt}\n\nClient: {user_msg}\nStyliste TATAW:"
+            contents=f"{system_prompt}\n\nClient: {user_msg}\nIA TATAW:"
         )
-        full_reply = response.text
-        recommended_products = []
-        
-        if "[RECOMMEND:" in full_reply:
-            parts = full_reply.split("[RECOMMEND:")
-            reply_text = parts[0].strip()
-            ids_str = parts[1].replace("]", "").strip()
-            product_ids = [int(i.strip()) for i in ids_str.split(",") if i.strip().isdigit()]
-            for p in all_products:
-                if p.id in product_ids:
-                    recommended_products.append({
-                        'id': p.id,
-                        'name': p.name,
-                        'price': p.price or 'Sur demande',
-                        'image_url': p.image_url
-                    })
-        else:
-            reply_text = full_reply.strip()
-
-        return jsonify({'reply': reply_text, 'products': recommended_products})
+        return jsonify({'reply': response.text.strip(), 'products': []})
     except Exception as e:
-        return jsonify({'reply': "Bienvenue chez TATAW x OFFX ! Que recherchez-vous ?", 'products': []})
+        return jsonify({'reply': "Bienvenue chez TATAW x OFFX !", 'products': []})
 
-@app.route('/api/visual-search', methods=['POST'])
-def visual_search():
-    if 'file' not in request.files:
-        return jsonify({'error': 'Aucune image envoyée'}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'Nom de fichier vide'}), 400
+@app.route('/api/generate-image', methods=['POST'])
+def generate_image_route():
+    data = request.get_json() or {}
+    prompt = data.get('prompt', '').strip()
+    user_id = session.get('user_id', request.remote_addr)
+
+    allowed, count = tataw_brain.check_and_increment_image_quota(user_id)
+    if not allowed:
+        return jsonify({'error': "Quota quotidien atteint (5/5). Réessayez demain !"}), 429
 
     try:
-        image_bytes = file.read()
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=[
-                image_bytes,
-                "Analyse cette image de vêtement/accessoire et identifie le style dominant, la couleur principale et la catégorie correspondante. Réponds uniquement au format JSON strict avec les clés: 'category', 'keywords'."
-            ]
+            contents=f"Génère une description de visuel streetwear TATAW x OFFX : {prompt}"
         )
-        return jsonify({'status': 'success', 'analysis': response.text})
+        return jsonify({'status': 'success', 'result': response.text, 'quota_used': count, 'quota_max': 5})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analyze-file', methods=['POST'])
+def analyze_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Aucun fichier fourni'}), 400
+    
+    file = request.files['file']
+    file_bytes = file.read()
+    file_type = file.content_type
+
+    try:
+        if file_type.startswith('image/'):
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=[file_bytes, "Analyse ce vêtement ou accessoire pour l'univers streetwear TATAW x OFFX."]
+            )
+            return jsonify({'type': 'image', 'analysis': response.text})
+        elif file_type.startswith('audio/'):
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=[file_bytes, "Transcris cet audio et réponds à la demande client pour TATAW x OFFX."]
+            )
+            return jsonify({'type': 'audio', 'transcription_and_reply': response.text})
+        else:
+            return jsonify({'error': 'Format non pris en charge'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -310,6 +323,10 @@ def add_product():
             db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type=mtype))
         db.session.commit()
 
+        # Ajout immédiat dans le cerveau de l'IA
+        info = f"Produit ID {new_product.id}: {new_product.name}, Catégorie: {new_product.category}, Prix: {new_product.price} FCFA, Description: {new_product.description}"
+        tataw_brain.add_knowledge(doc_id=f"prod_{new_product.id}", text_content=info)
+
         notify_new_article(new_product)
 
         flash("Article ajouté avec succès !")
@@ -326,26 +343,6 @@ def edit_product(id):
         product.price = request.form.get('price', product.price)
         product.stock_qty = int(request.form.get('stock_qty') or product.stock_qty)
         product.in_stock = True if product.stock_qty > 0 else False
-
-        image_file = request.files.get('image_file')
-        if image_file and image_file.filename != '':
-            filename = secure_filename(image_file.filename)
-            file_bytes = image_file.read()
-            url = ''
-            if supabase:
-                try:
-                    path_on_storage = f"products/{datetime.utcnow().timestamp()}_{filename}"
-                    supabase.storage.from_("tataw-media").upload(path_on_storage, file_bytes, file_options={"content-type": image_file.content_type})
-                    url = supabase.storage.from_("tataw-media").get_public_url(path_on_storage)
-                except Exception:
-                    pass
-            if not url:
-                os.makedirs('static/uploads', exist_ok=True)
-                filepath = os.path.join('static/uploads', filename)
-                image_file.seek(0)
-                image_file.save(filepath)
-                url = f'/{filepath}'
-            product.image_url = url
 
         db.session.commit()
         flash("Article mis à jour avec succès !")
