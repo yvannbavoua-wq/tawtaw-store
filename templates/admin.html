@@ -52,7 +52,12 @@
       <form action="/admin/add-product" method="POST" enctype="multipart/form-data" class="space-y-3">
         <input type="text" name="name" placeholder="Nom du produit" required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         <div class="grid grid-cols-2 gap-3">
-          <input type="text" name="category" placeholder="Catégorie (HOMME / FEMME / COSMETIQUES)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+          <select name="category" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-white font-bold outline-none">
+            <option value="" disabled selected>Sélectionner la Catégorie</option>
+            <option value="HOMME">HOMME</option>
+            <option value="FEMME">FEMME</option>
+            <option value="COSMETIQUES">COSMÉTIQUES</option>
+          </select>
           <input type="text" name="subcategory" placeholder="Sous-catégorie (ex: T-SHIRTS)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         </div>
 
@@ -90,7 +95,7 @@
         </div>
 
         <div class="grid grid-cols-3 gap-3">
-          <input type="text" name="price" placeholder="Prix (ex: 10000)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+          <input type="text" name="price" placeholder="Prix (ex: 6000)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
           <input type="text" name="promo_info" placeholder="Info Promo" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-yellow-400">
           <input type="number" name="stock_qty" placeholder="Quantité Stock (ex: 5)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         </div>
