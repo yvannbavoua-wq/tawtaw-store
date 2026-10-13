@@ -2,32 +2,52 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard Admin - TATAW x offx</title>
+  <title>Dashboard Admin - TATAW x OFFX</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-950 text-white p-6 min-h-screen font-sans">
   <div class="max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-8 border-b border-gray-800 pb-4">
       <div>
-        <h1 class="text-xl font-black tracking-wider uppercase text-red-500">ADMINISTRATION TATAW</h1>
-        <p class="text-xs text-gray-500">Gérez le catalogue, les stocks et les codes promo</p>
+        <h1 class="text-xl font-black tracking-wider uppercase text-red-500">ADMINISTRATION TATAW x OFFX</h1>
+        <p class="text-xs text-gray-500">Gérance autonome par IA, catalogue, carrousel & stocks par variante</p>
       </div>
       <div class="flex items-center gap-3">
-        <!-- BOUTON D'ACCÈS DIRECT À INDEX EN MODE ADMIN BYPASS -->
-        <a href="/?admin=1" target="_blank" class="text-xs bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl uppercase font-bold shadow flex items-center gap-2">
+        <a href="/" target="_blank" class="text-xs bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl uppercase font-bold shadow flex items-center gap-2">
           <span>🔍 Voir le site en direct</span>
         </a>
-        <a href="/" class="text-xs bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl uppercase font-bold">Retour Boutique 🛒</a>
       </div>
     </div>
 
-    <!-- PANEL CODES PROMO INFLUENCEURS -->
+    <!-- 1. GESTION DU CARROUSEL MANNEQUINS (HAUT DE PAGE) -->
+    <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 mb-8 shadow-xl">
+      <h2 class="text-xs font-bold uppercase mb-3 text-red-400">📸 Visuels Mannequins (Carrousel Haut de Page)</h2>
+      <p class="text-[11px] text-gray-400 mb-4">Téléversez ici les photos de mannequins/lifestyle qui s'afficheront tout en haut sur l'écran d'accueil du site.</p>
+      
+      <form action="/admin/add-hero-media" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row gap-3 mb-4">
+        <input type="file" name="hero_photo" accept="image/*" required class="flex-grow bg-gray-950 text-xs p-2.5 rounded-xl border border-gray-800 text-gray-300">
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl uppercase shadow">
+          Téléverser le visuel
+        </button>
+      </form>
+
+      <!-- Galerie des visuels mannequins actuels -->
+      <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-2">
+        {% for media in hero_media %}
+        <div class="relative group rounded-xl overflow-hidden border border-gray-800 aspect-square">
+          <img src="{{ media.file_url }}" class="w-full h-full object-cover">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 2. PANEL CODES PROMO & INFLUENCEURS -->
     <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 mb-8 shadow-xl">
       <h2 class="text-xs font-bold uppercase mb-4 text-yellow-500">🔥 Panel Codes Promo & Influenceurs</h2>
       <form action="/admin/add-promo" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-        <input type="text" name="code" placeholder="CODE (ex: INFLUENCEUR1)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 uppercase font-mono font-bold">
+        <input type="text" name="code" placeholder="CODE (ex: OFFX2026)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 uppercase font-mono font-bold">
         <input type="number" name="discount" placeholder="% Réduction (ex: 15)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 font-bold">
-        <input type="text" name="influencer" placeholder="Nom de l'influenceur (ex: Steve)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+        <input type="text" name="influencer" placeholder="Nom de l'influenceur" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         <button type="submit" class="md:col-span-3 bg-yellow-500 hover:bg-yellow-600 text-black font-black text-xs py-2.5 rounded-xl uppercase">Ajouter ce Code Promo</button>
       </form>
 
@@ -46,11 +66,12 @@
       </div>
     </div>
 
-    <!-- FORMULAIRE DE CRÉATION DE PRODUIT AVEC 3 IMAGES & DESCRIPTIONS ASSOCIÉES -->
+    <!-- 3. FORMULAIRE D'AJOUT D'ARTICLE -->
     <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 mb-8 shadow-xl">
-      <h2 class="text-xs font-bold uppercase mb-4 text-gray-300">Ajouter un article (Multi-visuels & Descriptions)</h2>
+      <h2 class="text-xs font-bold uppercase mb-4 text-gray-300">Ajouter un article au catalogue</h2>
       <form action="/admin/add-product" method="POST" enctype="multipart/form-data" class="space-y-3">
-        <input type="text" name="name" placeholder="Nom du produit" required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+        <input type="text" name="name" placeholder="Nom du produit (ex: TATAW HEAVY TEE)" required class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+        
         <div class="grid grid-cols-2 gap-3">
           <select name="category" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-white font-bold outline-none">
             <option value="" disabled selected>Sélectionner la Catégorie</option>
@@ -61,64 +82,32 @@
           <input type="text" name="subcategory" placeholder="Sous-catégorie (ex: T-SHIRTS)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         </div>
 
-        <!-- ESPACE 3 IMAGES DISTINCTES ET LEURS DESCRIPTIONS -->
-        <div class="bg-gray-950 p-4 rounded-2xl border border-gray-800 space-y-3">
-          <label class="block text-xs font-bold text-red-500 uppercase">Visuels & Descriptions associées :</label>
-          
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <!-- Image 1 -->
-            <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 space-y-2">
-              <span class="text-[10px] font-bold text-gray-400 block uppercase">1ère Image (Principale)</span>
-              <input type="file" name="photos" accept="image/*" required class="w-full text-[10px] text-gray-300 bg-gray-950 p-2 rounded border border-gray-700">
-              <input type="text" name="captions" placeholder="Description (ex: Noir)" class="w-full text-[10px] bg-gray-950 p-2 rounded border border-gray-700 text-white">
-            </div>
-
-            <!-- Image 2 -->
-            <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 space-y-2">
-              <span class="text-[10px] font-bold text-gray-400 block uppercase">2ème Image</span>
-              <input type="file" name="photos" accept="image/*" class="w-full text-[10px] text-gray-300 bg-gray-950 p-2 rounded border border-gray-700">
-              <input type="text" name="captions" placeholder="Description (ex: Bleu)" class="w-full text-[10px] bg-gray-950 p-2 rounded border border-gray-700 text-white">
-            </div>
-
-            <!-- Image 3 -->
-            <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 space-y-2">
-              <span class="text-[10px] font-bold text-gray-400 block uppercase">3ème Image</span>
-              <input type="file" name="photos" accept="image/*" class="w-full text-[10px] text-gray-300 bg-gray-950 p-2 rounded border border-gray-700">
-              <input type="text" name="captions" placeholder="Description (ex: Violet)" class="w-full text-[10px] bg-gray-950 p-2 rounded border border-gray-700 text-white">
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs text-gray-400 mb-1">Vidéos du produit (optionnel) :</label>
-          <input type="file" name="videos" accept="video/*" multiple class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-gray-300">
+        <div class="bg-gray-950 p-4 rounded-2xl border border-gray-800 space-y-2">
+          <label class="block text-xs font-bold text-red-500 uppercase">Photos du produit :</label>
+          <input type="file" name="photos" accept="image/*" multiple required class="w-full text-xs text-gray-300 bg-gray-900 p-2.5 rounded-xl border border-gray-700">
         </div>
 
         <div class="grid grid-cols-3 gap-3">
-          <input type="text" name="price" placeholder="Prix (ex: 6000)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
-          <input type="text" name="promo_info" placeholder="Info Promo" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-yellow-400">
-          <input type="number" name="stock_qty" placeholder="Quantité Stock (ex: 5)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+          <input type="text" name="price" placeholder="Prix en FCFA (ex: 6000)" required class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+          <input type="text" name="promo_info" placeholder="Badge Promo (ex: -20%)" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 text-yellow-400">
+          <input type="number" name="stock_qty" placeholder="Stock par défaut" class="bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
         </div>
 
-        <input type="text" name="options" placeholder="Modèles/Tailles (ex: Noir, Bleu, Violet)" class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
-        <textarea name="description" placeholder="Description globale du produit..." class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 h-20"></textarea>
+        <input type="text" name="options" placeholder="Couleurs disponibles séparées par des virgules (ex: Noir, Bleu, Blanc)" class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800">
+        <textarea name="description" placeholder="Description de l'article..." class="w-full bg-gray-950 text-xs p-3 rounded-xl border border-gray-800 h-20"></textarea>
 
-        <div class="grid grid-cols-2 gap-3 pt-2">
-          <label class="flex items-center gap-2 bg-gray-950 p-3 rounded-xl border border-gray-800 cursor-pointer text-xs">
-            <input type="checkbox" name="is_featured" class="w-4 h-4 text-red-600 rounded">
-            <span class="font-bold text-red-400">🔥 Nouveauté Semaine</span>
-          </label>
-          <label class="flex items-center gap-2 bg-gray-950 p-3 rounded-xl border border-gray-800 cursor-pointer text-xs">
-            <input type="checkbox" name="in_stock" checked class="w-4 h-4 text-green-600 rounded">
-            <span class="font-bold text-green-400">✅ En Stock</span>
-          </label>
+        <div class="flex items-center gap-2 bg-gray-950 p-3 rounded-xl border border-gray-800 cursor-pointer text-xs">
+          <input type="checkbox" name="is_featured" class="w-4 h-4 text-red-600 rounded">
+          <span class="font-bold text-red-400">🔥 Mettre en Nouveauté de la semaine</span>
         </div>
 
-        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 font-bold text-xs py-3.5 rounded-xl uppercase shadow">Enregistrer l'article Pro</button>
+        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 font-bold text-xs py-3.5 rounded-xl uppercase shadow">
+          Enregistrer l'article & Synchro IA
+        </button>
       </form>
     </div>
 
-    <!-- LISTE ET MISE À JOUR DES PRODUITS -->
+    <!-- 4. CATALOGUE ACTUEL -->
     <h2 class="text-xs font-bold uppercase mb-4 text-gray-400">Catalogue Actuel</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       {% for p in products %}
@@ -132,42 +121,14 @@
                 <button type="submit" class="text-red-500 hover:text-red-400 p-1">✕</button>
               </form>
             </div>
-            <p class="text-gray-400 mb-2 font-mono">{% if p.price %}{{ p.price }}{% else %}Sur demande{% endif %} FCFA (Stock: {{ p.stock_qty }})</p>
+            <p class="text-gray-400 mb-1 font-mono">{{ p.price }} FCFA</p>
+            <p class="text-[10px] text-gray-500">Couleurs : {{ p.options }}</p>
           </div>
         </div>
-
-        <!-- Formulaire de modification corrigé -->
-        <form action="/admin/edit-product/{{ p.id }}" method="POST" enctype="multipart/form-data" class="bg-gray-800 p-3 rounded-xl space-y-2 border border-gray-700">
-          <h4 class="text-[11px] font-black uppercase text-red-400">Modifier l'article</h4>
-          
-          <div>
-            <label class="text-[10px] text-gray-400 block">Nom :</label>
-            <input type="text" name="name" value="{{ p.name }}" class="w-full text-xs p-1.5 rounded bg-gray-900 border border-gray-700 text-white">
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[10px] text-gray-400 block">Prix (FCFA) :</label>
-              <input type="text" name="price" value="{{ p.price }}" class="w-full text-xs p-1.5 rounded bg-gray-900 border border-gray-700 text-white">
-            </div>
-            <div>
-              <label class="text-[10px] text-gray-400 block">Stock :</label>
-              <input type="number" name="stock_qty" value="{{ p.stock_qty }}" class="w-full text-xs p-1.5 rounded bg-gray-900 border border-gray-700 text-white">
-            </div>
-          </div>
-
-          <div>
-            <label class="text-[10px] text-gray-400 block">Changer l'image principale :</label>
-            <input type="file" name="image_file" class="w-full text-xs text-gray-400">
-          </div>
-
-          <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 rounded text-[10px] uppercase shadow">
-            Enregistrer les modifications 💾
-          </button>
-        </form>
       </div>
       {% endfor %}
     </div>
+
   </div>
 </body>
 </html>

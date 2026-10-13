@@ -17,6 +17,23 @@ class TatawMemoryAI:
         
         # Dictionnaire mémoire pour le quota d'images (5/jour max par utilisateur)
         self.image_quotas = {}
+        
+        # Ancrage de la mémoire de marque lors de l'initialisation
+        self._init_brand_story()
+
+    def _init_brand_story(self):
+        """Injecte la narration officielle de la marque dans la mémoire vectorielle"""
+        story_text = (
+            "TATAW x OFFX est le fruit de la rencontre et de la vision commune de deux frères : offx & nybe. "
+            "Dans les traditions nomades, TATAW représente l'étoile guidante, le point de repère à travers le parcours. "
+            "Né de la réunion entre l'héritage familial de nybe et la quête d'offx à promouvoir cet héritage "
+            "dans un esprit de joie, de force et d'excellence, ce projet et cette collaboration incarnent "
+            "notre boussole pour construire l'avenir ensemble."
+        )
+        try:
+            self.add_knowledge(doc_id="brand_story", text_content=story_text, metadata={"type": "brand_story"})
+        except Exception as e:
+            print(f"Erreur initialisation histoire de marque : {e}")
 
     def add_knowledge(self, doc_id, text_content, metadata=None):
         """Ajoute ou met à jour une fiche produit / règle dans la mémoire TATAW"""

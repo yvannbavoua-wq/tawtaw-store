@@ -50,11 +50,20 @@ class Product(db.Model):
     stock_qty = db.Column(db.Integer, default=5)
     rating = db.Column(db.Float, default=5.0)
 
+class ProductVariant(db.Model):
+    """Gestion autonome des stocks par taille (S, M, L, XL) et couleur"""
+    __tablename__ = 'product_variants'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    color = db.Column(db.String(50), nullable=False)
+    size = db.Column(db.String(20), nullable=False)
+    stock_qty = db.Column(db.Integer, default=1)
+
 class ProductMedia(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     file_url = db.Column(db.String(255), nullable=False)
-    media_type = db.Column(db.String(50), nullable=False)
+    media_type = db.Column(db.String(50), nullable=False) # 'image' ou 'hero_mannequin'
     caption = db.Column(db.String(255), nullable=True)
 
 class PromoCode(db.Model):
@@ -107,6 +116,12 @@ with app.app_context():
         )
         db.session.add(default_p)
         db.session.commit()
+        
+        # Initialisation des variantes (S, M, L, XL) pour le premier produit
+        for color in ["Noir", "Blanc", "Bleu"]:
+            for size in ["S", "M", "L", "XL"]:
+                db.session.add(ProductVariant(product_id=default_p.id, color=color, size=size, stock_qty=2))
+        db.session.commit()
     
     # Synchronisation automatique du catalogue dans la mémoire vectorielle de l'IA TATAW
     all_products = Product.query.all()
@@ -145,8 +160,16 @@ def ping():
 def index():
     products = Product.query.all()
     featured_products = Product.query.filter_by(is_featured=True).all()
+    hero_media = ProductMedia.query.filter_by(media_type='hero_mannequin').all()
     user = User.query.get(session.get('user_id')) if session.get('user_id') else None
-    return render_template('index.html', products=products, featured_products=featured_products, user=user, whatsapp_link=WHATSAPP_GROUP_LINK)
+    return render_template('index.html', products=products, featured_products=featured_products, hero_media=hero_media, user=user, whatsapp_link=WHATSAPP_GROUP_LINK)
+
+@app.route('/api/product-variants/<int:id>')
+def get_product_variants(id):
+    """API pour renvoyer le stock détaillé par taille et couleur pour l'IA et la page produit"""
+    variants = ProductVariant.query.filter_by(product_id=id).all()
+    data = [{'color': v.color, 'size': v.size, 'stock_qty': v.stock_qty} for v in variants]
+    return jsonify({'variants': data})
 
 client = genai.Client()
 
@@ -158,18 +181,19 @@ def ai_assistant():
     if not user_msg:
         return jsonify({'reply': 'Bonjour ! Bienvenue chez TATAW x OFFX. Comment puis-je vous aider ?', 'products': []})
 
-    # Recherche exclusive dans la base vectorielle de TATAW
     relevant_docs = tataw_brain.query_knowledge(user_msg, n_results=3)
     context_knowledge = "\n".join(relevant_docs) if relevant_docs else "Aucun article spécifique trouvé dans le catalogue."
 
     system_prompt = f"""
     Tu es l'Assistant IA Exclusif et Ambassadeur de Marque pour TATAW x OFFX (Yaoundé / Douala).
     
+    HISTOIRE OFFICIELLE :
+    TATAW x OFFX est né de l'alliance entre deux frères : offx & nybe. TATAW représente l'étoile guidante, l'union de l'héritage familial de nybe et de la quête d'offx à promouvoir cet héritage dans un esprit de joie, de force et d'excellence.
+
     DIRECTIVES STRICTES :
-    1. LANGUE : Détecte la langue du client (Français, Anglais, Pidgin, etc.) et réponds TOUJOURS dans cette MÊME langue.
-    2. SALUTATIONS : Réponds chaleureusement aux salutations (Bonjour, Bonsoir, Hello, etc.) selon la langue.
-    3. HORS-SUJET : Si la question n'a aucun rapport avec TATAW x OFFX, la mode, les vêtements, les cosmétiques ou le shopping, salue poliment mais rappelle que tu es spécialisé uniquement dans l'univers TATAW x OFFX.
-    4. CATALOGUE TATAW : Base tes réponses uniquement sur ces informations :
+    1. LANGUE : Détecte la langue du client et réponds toujours dans cette même langue.
+    2. GESTION DES STOCKS : Aide les clients à trouver les bonnes tailles (S, M, L, XL) et coloris disponibles.
+    3. CATALOGUE TATAW :
     {context_knowledge}
     """
 
@@ -261,13 +285,45 @@ def logout():
     flash("Vous êtes déconnecté.")
     return redirect(url_for('index'))
 
-# --- ADMINISTRATION ---
+# --- ADMINISTRATION & GÉRANCE PAR L'IA ---
 
 @app.route('/admin')
 def admin():
     products = Product.query.all()
     promos = PromoCode.query.all()
-    return render_template('admin.html', products=products, promos=promos, whatsapp_link=WHATSAPP_GROUP_LINK)
+    hero_media = ProductMedia.query.filter_by(media_type='hero_mannequin').all()
+    return render_template('admin.html', products=products, promos=promos, hero_media=hero_media, whatsapp_link=WHATSAPP_GROUP_LINK)
+
+@app.route('/admin/add-hero-media', methods=['POST'])
+def add_hero_media():
+    """Téléversement permanent des visuels de mannequins pour le carrousel du haut"""
+    try:
+        photo = request.files.get('hero_photo')
+        if photo and photo.filename != '':
+            filename = secure_filename(photo.filename)
+            file_bytes = photo.read()
+            url = ''
+            if supabase:
+                try:
+                    path = f"hero/{datetime.utcnow().timestamp()}_{filename}"
+                    supabase.storage.from_("tataw-media").upload(path, file_bytes, file_options={"content-type": photo.content_type})
+                    url = supabase.storage.from_("tataw-media").get_public_url(path)
+                except Exception:
+                    pass
+            if not url:
+                os.makedirs('static/uploads', exist_ok=True)
+                filepath = os.path.join('static/uploads', filename)
+                photo.seek(0)
+                photo.save(filepath)
+                url = f'/{filepath}'
+
+            db.session.add(ProductMedia(product_id=0, file_url=url, media_type='hero_mannequin'))
+            db.session.commit()
+            flash("Visuel mannequin ajouté au carrousel avec succès !")
+        return redirect('/admin')
+    except Exception as e:
+        flash(f"Erreur visuel mannequin : {e}")
+        return redirect('/admin')
 
 @app.route('/admin/add-product', methods=['POST'])
 def add_product():
@@ -319,11 +375,17 @@ def add_product():
         db.session.add(new_product)
         db.session.commit()
 
+        # Création automatique des variantes S, M, L, XL par défaut
+        colors = [c.strip() for c in new_product.options.split(',')] if new_product.options else ['Noir']
+        for color in colors:
+            for size in ['S', 'M', 'L', 'XL']:
+                db.session.add(ProductVariant(product_id=new_product.id, color=color, size=size, stock_qty=2))
+        db.session.commit()
+
         for url, mtype in saved_media:
             db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type=mtype))
         db.session.commit()
 
-        # Ajout immédiat dans le cerveau de l'IA
         info = f"Produit ID {new_product.id}: {new_product.name}, Catégorie: {new_product.category}, Prix: {new_product.price} FCFA, Description: {new_product.description}"
         tataw_brain.add_knowledge(doc_id=f"prod_{new_product.id}", text_content=info)
 
@@ -335,54 +397,15 @@ def add_product():
         flash(f"Erreur : {str(e)}")
         return redirect('/admin')
 
-@app.route('/admin/edit-product/<int:id>', methods=['POST'])
-def edit_product(id):
-    try:
-        product = Product.query.get_or_404(id)
-        product.name = request.form.get('name', product.name)
-        product.price = request.form.get('price', product.price)
-        product.stock_qty = int(request.form.get('stock_qty') or product.stock_qty)
-        product.in_stock = True if product.stock_qty > 0 else False
-
-        db.session.commit()
-        flash("Article mis à jour avec succès !")
-        return redirect('/admin')
-    except Exception as e:
-        flash(f"Erreur lors de la modification : {str(e)}")
-        return redirect('/admin')
-
 @app.route('/admin/delete-product/<int:id>', methods=['POST'])
 def delete_product(id):
     ProductMedia.query.filter_by(product_id=id).delete()
+    ProductVariant.query.filter_by(product_id=id).delete()
     product = Product.query.get_or_404(id)
     db.session.delete(product)
     db.session.commit()
     flash('Produit supprimé !')
     return redirect(url_for('admin'))
-
-@app.route('/admin/add-promo', methods=['POST'])
-def add_promo():
-    try:
-        code = request.form.get('code', '').strip().upper()
-        discount = int(request.form.get('discount') or 10)
-        influencer = request.form.get('influencer', '')
-        if code:
-            new_promo = PromoCode(code=code, discount_percent=discount, influencer_name=influencer)
-            db.session.add(new_promo)
-            db.session.commit()
-            flash("Code promo ajouté !")
-        return redirect('/admin')
-    except Exception as e:
-        flash(f"Erreur promo: {str(e)}")
-        return redirect('/admin')
-
-@app.route('/admin/delete-promo/<int:id>', methods=['POST'])
-def delete_promo(id):
-    promo = PromoCode.query.get_or_404(id)
-    db.session.delete(promo)
-    db.session.commit()
-    flash("Code promo supprimé !")
-    return redirect('/admin')
 
 # --- REINFORCEMENT LEARNING ---
 
@@ -410,18 +433,6 @@ def get_rl_recommendation():
     db.session.commit()
 
     return jsonify({'recommended_product_id': chosen_id, 'interaction_id': interaction.id})
-
-@app.route('/api/rl/reward', methods=['POST'])
-def set_rl_reward():
-    data = request.get_json() or {}
-    interaction_id = data.get('interaction_id')
-    reward_value = data.get('reward', 1.0)
-    interaction = RLInteraction.query.get(interaction_id)
-    if interaction:
-        interaction.reward = float(reward_value)
-        db.session.commit()
-        return jsonify({'status': 'success'})
-    return jsonify({'status': 'error'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
