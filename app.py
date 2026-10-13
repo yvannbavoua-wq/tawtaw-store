@@ -100,6 +100,15 @@ class RLModelConfig(db.Model):
 
 with app.app_context():
     db.create_all()
+
+    # --- AUTO-MIGRATION SQL : Ajoute 'caption' si la colonne n'existe pas ---
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(db.text("ALTER TABLE product_media ADD COLUMN IF NOT EXISTS caption VARCHAR(255);"))
+            conn.commit()
+    except Exception as e:
+        print(f"Migration DB note : {e}")
+
     if not Product.query.first():
         default_p = Product(
             name="Tawtaw t-shirt Streetwear",
@@ -117,13 +126,13 @@ with app.app_context():
         db.session.add(default_p)
         db.session.commit()
         
-        # Initialisation des variantes (S, M, L, XL) pour le premier produit
+        # Initialisation des variantes (S, M, L, XL)
         for color in ["Noir", "Blanc", "Bleu"]:
             for size in ["S", "M", "L", "XL"]:
                 db.session.add(ProductVariant(product_id=default_p.id, color=color, size=size, stock_qty=2))
         db.session.commit()
     
-    # Synchronisation automatique du catalogue dans la mémoire vectorielle de l'IA TATAW
+    # Synchronisation du catalogue
     all_products = Product.query.all()
     for p in all_products:
         info = f"Produit ID {p.id}: {p.name}, Catégorie: {p.category} ({p.subcategory}), Prix: {p.price} FCFA, Options: {p.options}, Description: {p.description}"
@@ -166,7 +175,6 @@ def index():
 
 @app.route('/api/product-variants/<int:id>')
 def get_product_variants(id):
-    """API pour renvoyer le stock détaillé par taille et couleur pour l'IA et la page produit"""
     variants = ProductVariant.query.filter_by(product_id=id).all()
     data = [{'color': v.color, 'size': v.size, 'stock_qty': v.stock_qty} for v in variants]
     return jsonify({'variants': data})
@@ -296,7 +304,6 @@ def admin():
 
 @app.route('/admin/add-hero-media', methods=['POST'])
 def add_hero_media():
-    """Téléversement permanent des visuels de mannequins pour le carrousel du haut"""
     try:
         photo = request.files.get('hero_photo')
         if photo and photo.filename != '':
@@ -375,7 +382,6 @@ def add_product():
         db.session.add(new_product)
         db.session.commit()
 
-        # Création automatique des variantes S, M, L, XL par défaut
         colors = [c.strip() for c in new_product.options.split(',')] if new_product.options else ['Noir']
         for color in colors:
             for size in ['S', 'M', 'L', 'XL']:
