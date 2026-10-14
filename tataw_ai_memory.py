@@ -1,4 +1,4 @@
-import os
+Import os
 from datetime import datetime
 
 class TatawMemoryAI:

@@ -199,6 +199,22 @@ def index():
     user = User.query.get(session.get('user_id')) if session.get('user_id') else None
     return render_template('index.html', products=products, featured_products=featured_products, hero_media=hero_media, user=user, whatsapp_link=WHATSAPP_GROUP_LINK)
 
+@app.route('/api/product-details/<int:id>')
+def get_product_details(id):
+    product = Product.query.get_or_404(id)
+    return jsonify({
+        'id': product.id,
+        'name': product.name,
+        'category': product.category,
+        'subcategory': product.subcategory,
+        'price': product.price,
+        'image_url': product.image_url,
+        'description': product.description,
+        'options': product.options,
+        'in_stock': product.in_stock,
+        'stock_qty': product.stock_qty
+    })
+
 @app.route('/api/product-variants/<int:id>')
 def get_product_variants(id):
     variants = ProductVariant.query.filter_by(product_id=id).all()
@@ -225,37 +241,47 @@ def ai_assistant():
     master_context = tataw_brain.get_full_context()
 
     system_instruction = f"""
-    Tu es Lia, l'Assistant IA Exclusif, Expert Styliste et Ambassadeur de Marque pour TATAW x OFFX (Yaoundé / Douala).
-    Tu te comportes comme un personal shopper de haute voltige : charismatique, précis, chaleureux et passionné.
+    Tu es Lia, une Intelligence Artificielle autonome, ultra-intelligente, expert styliste et ambassadrice officielle de la marque streetwear TATAW x OFFX (Yaoundé / Douala).
+    Tu possèdes la même agilité intellectuelle, la même précision et la même fluidité de conversation que les modèles d'IA de pointe (ChatGPT, Claude, Gemini).
 
     --- SOCLE D'EXPERTISE MODE & STREETWEAR ---
     - Maîtrise totale des codes streetwear (oversize, boxy fit, layering, techwear, minimalisme urbain, contrastes de matières).
     - Capable de conseiller les coupes idéales selon la morphologie, les associations de couleurs et de proposer des assemblages complets.
-    - Attitude urbaine, raffinée, accessible et professionnelle.
+    - Attitude urbaine, raffinée, accessible, vivante et professionnelle.
 
     {master_context}
 
     DIRECTIVES STRICTES :
-    1. LANGUE : Détecte automatiquement la langue (Français, Anglais, Pidgin) et réponds dans la même langue.
-    2. VENTE CROISÉE & CONSEIL : Utilise le catalogue ci-dessus en temps réel pour suggérer les tailles (S, M, L, XL), verifier les prix en FCFA et proposer des ensembles.
-    3. HISTOIRE : Valorise l'alliance des deux frères (offx & nybe) et l'identité nomade streetwear de TATAW.
+    1. LANGUE : Détecte automatiquement la langue de l'utilisateur (Français, Anglais, Pidgin, etc.) et réponds naturellement dans la même langue.
+    2. AUTONOMIE & DYNAMISME : Sois percutante, conversationnelle et adaptative. Ne répète jamais machinalement la même phrase d'accueil si la conversation a déjà commencé.
+    3. VENTE CROISÉE & CONSEIL : Utilise le catalogue ci-dessus en temps réel pour suggérer les tailles (S, M, L, XL), vérifier les prix en FCFA et proposer des ensembles.
+    4. HISTOIRE : Valorise l'alliance des deux frères (offx & nybe) et l'identité nomade streetwear de TATAW.
     """
 
     try:
         chat_contents = [system_instruction]
-        for h in history:
-            role = "Utilisateur" if h.get('sender') == 'user' else "Assistant Lia (TATAW)"
+        for h in history[:-1]:
+            role = "Utilisateur" if h.get('sender') == 'user' else "Lia"
             chat_contents.append(f"{role}: {h.get('text')}")
             
-        chat_contents.append(f"Utilisateur: {user_msg}\nAssistant Lia (TATAW):")
+        chat_contents.append(f"Utilisateur: {user_msg}\nLia:")
 
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents="\n".join(chat_contents)
         )
-        return jsonify({'reply': response.text.strip(), 'products': []})
+        reply_text = response.text.strip() if response and response.text else "Je suis à ton écoute !"
+        return jsonify({'reply': reply_text, 'products': []})
     except Exception as e:
-        return jsonify({'reply': "Yo ! Bienvenue chez TATAW x OFFX. Dis-moi ce que tu cherches aujourd'hui, je m'en occupe !", 'products': []})
+        print(f"Erreur Lia AI: {e}")
+        try:
+            simple_resp = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=f"{system_instruction}\n\nUtilisateur: {user_msg}\nLia:"
+            )
+            return jsonify({'reply': simple_resp.text.strip(), 'products': []})
+        except Exception:
+            return jsonify({'reply': "Yo ! Je t'écoute. Dis-moi ce que tu cherches aujourd'hui !", 'products': []})
 
 @app.route('/api/generate-image', methods=['POST'])
 def generate_image_route():
@@ -370,7 +396,6 @@ def add_hero_media():
     try:
         photos = request.files.getlist('hero_photos')
         if not photos or photos[0].filename == '':
-            # Fallback champ unique si envoyé sous un autre nom
             p = request.files.get('hero_photo')
             photos = [p] if p else []
 
@@ -451,7 +476,6 @@ def add_product():
 
 @app.route('/admin/add-variant', methods=['POST'])
 def add_variant():
-    """Route pour ajouter ou associer une photo/stock à une couleur et taille spécifique"""
     try:
         product_id = int(request.form['product_id'])
         color = request.form['color'].strip()

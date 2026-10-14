@@ -146,6 +146,69 @@ Dans les traditions nomades, TATAW représente l'étoile guidante, le point de r
 <button onclick="switchTab('articles')" class="bg-black text-white dark:bg-white dark:text-black text-xs font-bold py-2.5 px-6 rounded-xl uppercase shadow">Voir les Collections 🛒</button>
 </div>
 
+<!-- SECTION MON COMPTE -->
+<div id="section-account" class="hidden max-w-md mx-auto my-8 p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-800 shadow-sm">
+  <div class="flex items-center gap-3 mb-4">
+    <div class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center font-black">👤</div>
+    <div>
+      <h3 class="text-sm font-black uppercase text-gray-900 dark:text-white">Mon Compte TATAW</h3>
+      <p class="text-[11px] text-gray-500">Gérez vos informations et accès WhatsApp</p>
+    </div>
+  </div>
+
+  {% if user %}
+    <div class="space-y-3 text-xs">
+      <div class="bg-gray-50 dark:bg-gray-950 p-3 rounded-xl border border-gray-800">
+        <p class="text-gray-400 text-[10px] uppercase">Nom d'utilisateur</p>
+        <p class="font-bold text-white">{{ user.username }}</p>
+      </div>
+      <div class="bg-gray-50 dark:bg-gray-950 p-3 rounded-xl border border-gray-800">
+        <p class="text-gray-400 text-[10px] uppercase">Téléphone / WhatsApp</p>
+        <p class="font-bold text-white">{{ user.phone }}</p>
+      </div>
+      <a href="/logout" class="block text-center w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl uppercase transition">Se Déconnecter</a>
+    </div>
+  {% else %}
+    <form action="/login-auth" method="POST" class="space-y-3 text-xs">
+      <div>
+        <label class="text-[10px] text-gray-400 uppercase">Votre Nom :</label>
+        <input type="text" name="username" required placeholder="Ex: Junior OFFX" class="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-white outline-none">
+      </div>
+      <div>
+        <label class="text-[10px] text-gray-400 uppercase">Numéro WhatsApp :</label>
+        <input type="text" name="phone" required placeholder="Ex: +2376..." class="w-full bg-gray-950 border border-gray-800 rounded-xl p-2.5 text-white outline-none">
+      </div>
+      <button type="submit" class="w-full bg-black dark:bg-white text-white dark:text-black font-black py-3 rounded-xl uppercase shadow transition">Se connecter / S'inscrire</button>
+    </form>
+  {% endif %}
+</div>
+
+<!-- SECTION PARAMÈTRES -->
+<div id="section-settings" class="hidden max-w-md mx-auto my-8 p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-800 shadow-sm text-xs space-y-4">
+  <div class="flex items-center gap-3 mb-2">
+    <div class="w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center font-black">⚙️</div>
+    <div>
+      <h3 class="text-sm font-black uppercase text-gray-900 dark:text-white">Paramètres de l'application</h3>
+      <p class="text-[11px] text-gray-500">Préférences d'affichage et système</p>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-950 rounded-xl border border-gray-800">
+    <span class="font-bold">Mode Sombre / Clair</span>
+    <button onclick="document.getElementById('html-root').classList.toggle('dark')" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg font-bold">Basculer 🌓</button>
+  </div>
+
+  <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-950 rounded-xl border border-gray-800">
+    <span class="font-bold">Cache & Données Panier</span>
+    <button onclick="localStorage.clear(); alert('Cache vidé !'); location.reload();" class="bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-lg font-bold transition">Réinitialiser 🗑️</button>
+  </div>
+
+  <div class="p-3 bg-gray-50 dark:bg-gray-950 rounded-xl border border-gray-800 text-center text-gray-400">
+    <p class="font-bold text-white">TATAW x OFFX • Édition 2026</p>
+    <p class="text-[10px] mt-1">Propulsé par Cerveau Autonome Lia & Supabase</p>
+  </div>
+</div>
+
 <!-- CATALOGUE PRINCIPAL -->
 <main id="section-articles" class="max-w-6xl mx-auto px-4 py-2 flex-grow w-full">
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -228,10 +291,13 @@ Ajouter au panier
 </div>
 </div>
 
-<!-- NAVIGATION INFÉRIEURE -->
-<div class="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-40 px-6 py-2.5 flex items-center justify-around shadow-lg">
-<a href="/" class="flex flex-col items-center text-red-600 text-xs font-bold"><i class="fa-solid fa-house text-lg mb-0.5"></i><span>Accueil</span></a>
-<button onclick="toggleCart()" class="flex flex-col items-center text-gray-600 dark:text-gray-400 text-xs font-bold"><i class="fa-solid fa-bag-shopping text-lg mb-0.5"></i><span>Panier</span></button>
+<!-- NAVIGATION INFÉRIEURE MISE À JOUR -->
+<div class="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-40 px-4 py-2.5 flex items-center justify-around shadow-lg">
+  <button onclick="switchTab('articles')" class="flex flex-col items-center text-red-600 text-xs font-bold"><i class="fa-solid fa-house text-lg mb-0.5"></i><span>Accueil</span></button>
+  <button onclick="switchTab('ai-mode')" class="flex flex-col items-center text-gray-600 dark:text-gray-400 text-xs font-bold"><i class="fa-solid fa-brain text-lg mb-0.5"></i><span>Lia AI</span></button>
+  <button onclick="toggleCart()" class="flex flex-col items-center text-gray-600 dark:text-gray-400 text-xs font-bold relative"><i class="fa-solid fa-bag-shopping text-lg mb-0.5"></i><span>Panier</span><span id="cart-count-badge" class="absolute -top-1 -right-2 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">0</span></button>
+  <button onclick="switchTab('account')" class="flex flex-col items-center text-gray-600 dark:text-gray-400 text-xs font-bold"><i class="fa-solid fa-user text-lg mb-0.5"></i><span>Compte</span></button>
+  <button onclick="switchTab('settings')" class="flex flex-col items-center text-gray-600 dark:text-gray-400 text-xs font-bold"><i class="fa-solid fa-gear text-lg mb-0.5"></i><span>Paramètres</span></button>
 </div>
 
 <!-- PANIER SIDEBAR -->
@@ -283,24 +349,26 @@ let cart = JSON.parse(localStorage.getItem('tataw_cart')) || [];
 renderCart();
 
 function switchTab(tab) {
-  ['ai-mode', 'news', 'articles', 'bio'].forEach(t => {
+  // Liste de toutes les sections principales
+  ['ai-mode', 'news', 'articles', 'bio', 'account', 'settings'].forEach(t => {
     const sec = document.getElementById(`section-${t}`);
     if(sec) sec.classList.add('hidden');
     const btn = document.getElementById(`tab-${t}`);
     if(btn) btn.className = "py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all text-gray-600 dark:text-gray-400";
   });
+  
   const targetSec = document.getElementById(`section-${tab}`);
   if(targetSec) targetSec.classList.remove('hidden');
   const targetBtn = document.getElementById(`tab-${tab}`);
   if(targetBtn) targetBtn.className = "py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all bg-black text-white dark:bg-white dark:text-black shadow";
 
-  // Masquer les filtres de catégories sur AI Mode et Histoire
+  // Masquer ou afficher la barre de catégories selon l'onglet actif
   const catBar = document.getElementById('categoryFilterBar');
   if (catBar) {
-    if (tab === 'ai-mode' || tab === 'bio') {
-      catBar.classList.add('hidden');
-    } else {
+    if (tab === 'articles' || tab === 'news') {
       catBar.classList.remove('hidden');
+    } else {
+      catBar.classList.add('hidden');
     }
   }
 }
@@ -374,7 +442,6 @@ async function openProductPage(productId) {
         btn.className = 'color-btn px-3 py-1.5 text-xs font-bold rounded-xl border border-gray-300 dark:border-gray-700 bg-black text-white dark:bg-white dark:text-black';
         selectedColor = cName;
         
-        // Mettre à jour l'image principale si une variante possède une photo pour cette couleur
         const matchedVariant = productVariants.find(v => v.color.toLowerCase() === selectedColor.toLowerCase() && v.image_url);
         if (matchedVariant && matchedVariant.image_url) {
           document.getElementById('detail-img').src = matchedVariant.image_url;
@@ -439,6 +506,9 @@ function addCurrentToCart() {
 
 function renderCart() {
   document.getElementById('cart-count').innerText = cart.length;
+  const badgeCount = document.getElementById('cart-count-badge');
+  if(badgeCount) badgeCount.innerText = cart.length;
+  
   const itemsContainer = document.getElementById('cart-items');
   let subtotal = 0;
   itemsContainer.innerHTML = cart.map((item, i) => {
