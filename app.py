@@ -131,12 +131,6 @@ with app.app_context():
             for size in ["S", "M", "L", "XL"]:
                 db.session.add(ProductVariant(product_id=default_p.id, color=color, size=size, stock_qty=2))
         db.session.commit()
-    
-    # Synchronisation du catalogue
-    all_products = Product.query.all()
-    for p in all_products:
-        info = f"Produit ID {p.id}: {p.name}, Catégorie: {p.category} ({p.subcategory}), Prix: {p.price} FCFA, Options: {p.options}, Description: {p.description}"
-        tataw_brain.add_knowledge(doc_id=f"prod_{p.id}", text_content=info, metadata={"type": "product", "id": p.id})
 
 # --- NOTIFICATIONS ---
 
@@ -185,34 +179,40 @@ client = genai.Client()
 def ai_assistant():
     data = request.get_json() or {}
     user_msg = data.get('message', '').strip()
+    history = data.get('history', [])
 
     if not user_msg:
-        return jsonify({'reply': 'Bonjour ! Bienvenue chez TATAW x OFFX. Comment puis-je vous aider ?', 'products': []})
+        return jsonify({'reply': "Yo ! Je suis l'assistant officiel de TATAW x OFFX. Comment puis-je t'aider aujourd'hui ?", 'products': []})
 
-    relevant_docs = tataw_brain.query_knowledge(user_msg, n_results=3)
-    context_knowledge = "\n".join(relevant_docs) if relevant_docs else "Aucun article spécifique trouvé dans le catalogue."
+    master_context = tataw_brain.get_full_context()
 
-    system_prompt = f"""
-    Tu es l'Assistant IA Exclusif et Ambassadeur de Marque pour TATAW x OFFX (Yaoundé / Douala).
-    
-    HISTOIRE OFFICIELLE :
-    TATAW x OFFX est né de l'alliance entre deux frères : offx & nybe. TATAW représente l'étoile guidante, l'union de l'héritage familial de nybe et de la quête d'offx à promouvoir cet héritage dans un esprit de joie, de force et d'excellence.
+    system_instruction = f"""
+    Tu es l'Assistant IA Exclusif, expert et Ambassadeur de Marque pour TATAW x OFFX (Yaoundé / Douala).
+    Tu te comportes exactement comme un assistant haut de gamme, intelligent, conversationnel, chaleureux et extrêmement précis. Tu réponds de manière fluide, détaillée et structurée.
+
+    {master_context}
 
     DIRECTIVES STRICTES :
-    1. LANGUE : Détecte la langue du client et réponds toujours dans cette même langue.
-    2. GESTION DES STOCKS : Aide les clients à trouver les bonnes tailles (S, M, L, XL) et coloris disponibles.
-    3. CATALOGUE TATAW :
-    {context_knowledge}
+    1. LANGUE : Détecte automatiquement la langue de l'utilisateur (Français, Anglais, Pidgin) et réponds dans la même langue.
+    2. EXPERTISE VENTE & CONSEIL : Aide le client à choisir ses articles, explique les coupes (boxy), guide-le sur les tailles (S, M, L, XL) et les coloris disponibles.
+    3. HISTOIRE : Mets en avant l'alliance des deux frères (offx & nybe) et l'esprit nomade/streetwear de TATAW quand c'est pertinent.
     """
 
     try:
+        chat_contents = [system_instruction]
+        for h in history:
+            role = "Utilisateur" if h.get('sender') == 'user' else "Assistant TATAW"
+            chat_contents.append(f"{role}: {h.get('text')}")
+            
+        chat_contents.append(f"Utilisateur: {user_msg}\nAssistant TATAW:")
+
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=f"{system_prompt}\n\nClient: {user_msg}\nIA TATAW:"
+            contents="\n".join(chat_contents)
         )
         return jsonify({'reply': response.text.strip(), 'products': []})
     except Exception as e:
-        return jsonify({'reply': "Bienvenue chez TATAW x OFFX !", 'products': []})
+        return jsonify({'reply': "Salut ! Bienvenue chez TATAW x OFFX. Que puis-je faire pour toi ?", 'products': []})
 
 @app.route('/api/generate-image', methods=['POST'])
 def generate_image_route():
@@ -235,30 +235,34 @@ def generate_image_route():
 
 @app.route('/api/analyze-file', methods=['POST'])
 def analyze_file():
-    if 'file' not in request.files:
+    files = request.files.getlist('file')
+    if not files:
         return jsonify({'error': 'Aucun fichier fourni'}), 400
     
-    file = request.files['file']
-    file_bytes = file.read()
-    file_type = file.content_type
+    results = []
+    for file in files:
+        file_bytes = file.read()
+        file_type = file.content_type or ""
 
-    try:
-        if file_type.startswith('image/'):
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=[file_bytes, "Analyse ce vêtement ou accessoire pour l'univers streetwear TATAW x OFFX."]
-            )
-            return jsonify({'type': 'image', 'analysis': response.text})
-        elif file_type.startswith('audio/'):
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=[file_bytes, "Transcris cet audio et réponds à la demande client pour TATAW x OFFX."]
-            )
-            return jsonify({'type': 'audio', 'transcription_and_reply': response.text})
-        else:
-            return jsonify({'error': 'Format non pris en charge'}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        try:
+            if file_type.startswith('image/'):
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=[file_bytes, "Analyse ce vêtement ou accessoire pour l'univers streetwear TATAW x OFFX."]
+                )
+                results.append(response.text)
+            elif file_type.startswith('audio/'):
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=[file_bytes, "Transcris cet audio et réponds à la demande client pour TATAW x OFFX."]
+                )
+                results.append(response.text)
+            else:
+                results.append(f"Format non pris en charge pour {file.filename}")
+        except Exception as e:
+            results.append(f"Erreur sur {file.filename}: {str(e)}")
+
+    return jsonify({'analysis': "<br><br>".join(results)})
 
 @app.route('/login-auth', methods=['POST'])
 def login_auth():
@@ -392,9 +396,6 @@ def add_product():
             db.session.add(ProductMedia(product_id=new_product.id, file_url=url, media_type=mtype))
         db.session.commit()
 
-        info = f"Produit ID {new_product.id}: {new_product.name}, Catégorie: {new_product.category}, Prix: {new_product.price} FCFA, Description: {new_product.description}"
-        tataw_brain.add_knowledge(doc_id=f"prod_{new_product.id}", text_content=info)
-
         notify_new_article(new_product)
 
         flash("Article ajouté avec succès !")
@@ -402,6 +403,44 @@ def add_product():
     except Exception as e:
         flash(f"Erreur : {str(e)}")
         return redirect('/admin')
+
+@app.route('/admin/update-product/<int:id>', methods=['POST'])
+def update_product(id):
+    try:
+        product = Product.query.get_or_404(id)
+        product.name = request.form.get('name', product.name)
+        product.price = request.form.get('price', product.price)
+        
+        stock_qty = request.form.get('stock_qty')
+        if stock_qty is not None:
+            product.stock_qty = int(stock_qty)
+            product.in_stock = True if int(stock_qty) > 0 else False
+
+        photo = request.files.get('image')
+        if photo and photo.filename != '':
+            filename = secure_filename(photo.filename)
+            file_bytes = photo.read()
+            url = ''
+            if supabase:
+                try:
+                    path = f"products/{datetime.utcnow().timestamp()}_{filename}"
+                    supabase.storage.from_("tataw-media").upload(path, file_bytes, file_options={"content-type": photo.content_type})
+                    url = supabase.storage.from_("tataw-media").get_public_url(path)
+                except Exception:
+                    pass
+            if not url:
+                os.makedirs('static/uploads', exist_ok=True)
+                filepath = os.path.join('static/uploads', filename)
+                photo.seek(0)
+                photo.save(filepath)
+                url = f'/{filepath}'
+            product.image_url = url
+
+        db.session.commit()
+        flash("Article mis à jour avec succès !")
+    except Exception as e:
+        flash(f"Erreur mise à jour : {e}")
+    return redirect('/admin')
 
 @app.route('/admin/delete-product/<int:id>', methods=['POST'])
 def delete_product(id):

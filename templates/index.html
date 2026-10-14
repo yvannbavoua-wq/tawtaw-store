@@ -2,8 +2,7 @@
 <html lang="fr" id="html-root">
 <head>
 <meta charset="UTF-8">
-<title>TATAW x OFFX - Plateforme Commerce Mobile Alibaba-Inspiree</title>
-<meta name="description" content="Plateforme e-commerce mobile haut de gamme inspirée d'Alibaba pour TATAW x OFFX. Intelligence Artificielle autonome, recherche visuelle, et marketing automatisé.">
+<title>TATAW x OFFX - Écosystème E-Commerce Autonome</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config = { darkMode: 'class' }</script>
@@ -15,40 +14,65 @@
 .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans min-h-screen flex flex-col pb-20 transition-colors duration-300">
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans min-h-screen flex flex-col pb-24 transition-colors duration-300">
 
-<!-- ÉCRAN DE CHARGEMENT / WAKE-UP SERVEUR -->
+<!-- ÉCRAN DE CHARGEMENT SERVEUR -->
 <div id="serverWakeScreen" class="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-6 text-center text-white transition-opacity duration-700">
 <div class="max-w-md w-full bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-2xl">
 <div class="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
 <h2 class="text-xs font-black uppercase text-red-500 tracking-widest mb-1">MOTEUR TATAW x OFFX EN COURS DE RÉVEIL</h2>
 <h1 class="text-lg font-black uppercase mb-3">CHARGEMENT DE LA HYPE...</h1>
-<p class="text-xs text-gray-400 mb-2">Patientez quelques secondes, notre instance sécurisée sort de veille.</p>
 <div id="wakeTimer" class="text-[10px] font-mono text-yellow-400 font-bold">Connexion au serveur...</div>
 </div>
 </div>
 
-<!-- EN-TÊTE STYLE ALIBABA AVEC RECHERCHE VISUELLE PAR PHOTO -->
-<header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40 px-4 py-3 shadow-sm">
+<!-- 1. CARROUSEL DE MANNEQUINS TOUT EN HAUT -->
+<div class="w-full max-w-6xl mx-auto px-2 pt-2">
+  <div class="relative rounded-3xl overflow-hidden shadow-2xl bg-black border border-gray-800">
+    <div id="topHeroSlider" class="relative h-72 sm:h-80 md:h-[400px] w-full overflow-hidden">
+      {% if hero_media and hero_media|length > 0 %}
+        {% for media in hero_media %}
+        <div class="hero-slide absolute inset-0 transition-opacity duration-700 ease-in-out {% if loop.first %}opacity-100 z-10{% else %}opacity-0 z-0{% endif %}">
+          <img src="{{ media.file_url }}" alt="TATAW Visuel" class="w-full h-full object-cover">
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="hero-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 z-10">
+          <img src="https://i.ibb.co/SXHNbgRS/Photoroom-20261006-212634.jpg" alt="TATAW Mannequins" class="w-full h-full object-cover">
+        </div>
+        <div class="hero-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 z-0">
+          <img src="https://i.ibb.co/v66HHnLX/IMG-1652.jpg" alt="TATAW Collection" class="w-full h-full object-cover">
+        </div>
+      {% endif %}
+      <button type="button" onclick="prevSlide()" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-black transition z-30 backdrop-blur-sm border border-white/20">
+        <i class="fa-solid fa-chevron-left text-xs"></i>
+      </button>
+      <button type="button" onclick="nextSlide()" class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-black transition z-30 backdrop-blur-sm border border-white/20">
+        <i class="fa-solid fa-chevron-right text-xs"></i>
+      </button>
+    </div>
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 flex items-center gap-2 z-30">
+      <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+      <span class="text-[11px] font-black uppercase text-white tracking-widest">TATAW x OFFX • Yaoundé</span>
+    </div>
+  </div>
+</div>
+
+<!-- EN-TÊTE -->
+<header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40 px-4 py-3 shadow-sm mt-2">
 <div class="flex items-center justify-between gap-2 max-w-6xl mx-auto">
 <a href="/" class="flex items-center gap-2 flex-shrink-0">
 <img src="https://i.ibb.co/v66HHnLX/IMG-1652.jpg" alt="TATAW Logo" class="h-9 w-auto object-contain">
 </a>
-
-<!-- Barre de recherche globale + Upload Visuel -->
 <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 border border-gray-300 dark:border-gray-700 flex-grow max-w-md">
 <i class="fa-solid fa-magnifying-glass text-xs text-gray-400 mr-2"></i>
 <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Rechercher un article, style..." class="bg-transparent text-xs outline-none w-full dark:text-white">
-<label for="visualSearchInput" class="cursor-pointer text-gray-500 hover:text-red-500 pl-2 border-l border-gray-300 dark:border-gray-700 ml-2" title="Recherche visuelle par photo">
-<i class="fa-solid fa-camera text-sm"></i>
+<label class="cursor-pointer text-gray-400 hover:text-red-500 transition px-1" title="Analyser une image">
+  <i class="fa-solid fa-camera text-xs"></i>
+  <input type="file" id="searchFileInput" accept="image/*" class="hidden" onchange="searchUploadImage(event)">
 </label>
-<input type="file" id="visualSearchInput" accept="image/*" class="hidden" onchange="handleVisualSearch(event)">
 </div>
-
 <div class="flex items-center gap-2 flex-shrink-0">
-<button onclick="openSettingsModal()" class="p-1.5 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white" title="Paramètres">
-<i class="fa-solid fa-gear text-base"></i>
-</button>
 <button onclick="toggleCart()" class="relative text-gray-800 dark:text-white p-1">
 <i class="fa-solid fa-bag-shopping text-xl"></i>
 <span id="cart-count" class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow">0</span>
@@ -57,62 +81,42 @@
 </div>
 </header>
 
-<!-- ONGLETS DE NAVIGATION PRINCIPAUX -->
+<!-- ONGLETS -->
 <div class="max-w-xl mx-auto mt-4 px-4 text-center">
 <div class="grid grid-cols-4 gap-1 bg-gray-200 dark:bg-gray-800 p-1 rounded-2xl">
-<button onclick="switchTab('ai-mode')" id="tab-ai-mode" class="py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all text-gray-600 dark:text-gray-400">🤖 AI Mode</button>
-<button onclick="switchTab('news')" id="tab-news" class="py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all text-gray-600 dark:text-gray-400">🔥 Nouveautés</button>
-<button onclick="switchTab('articles')" id="tab-articles" class="py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all bg-black text-white dark:bg-white dark:text-black shadow">🛍️ Collections</button>
-<button onclick="switchTab('bio')" id="tab-bio" class="py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all text-gray-600 dark:text-gray-400">📖 Histoire</button>
+<button onclick="switchTab('ai-mode')" id="tab-ai-mode" class="py-2 px-1 rounded-xl text-[10px] font-black uppercase text-gray-600 dark:text-gray-400">🤖 AI Mode</button>
+<button onclick="switchTab('news')" id="tab-news" class="py-2 px-1 rounded-xl text-[10px] font-black uppercase text-gray-600 dark:text-gray-400">🔥 Nouveautés</button>
+<button onclick="switchTab('articles')" id="tab-articles" class="py-2 px-1 rounded-xl text-[10px] font-black uppercase bg-black text-white dark:bg-white dark:text-black shadow">🛍️ Collections</button>
+<button onclick="switchTab('bio')" id="tab-bio" class="py-2 px-1 rounded-xl text-[10px] font-black uppercase text-gray-600 dark:text-gray-400">📖 Histoire</button>
 </div>
 </div>
 
-<!-- SOUS-BARRE DES CATÉGORIES DÉFILANTE -->
+<!-- CATÉGORIES -->
 <div class="max-w-6xl mx-auto px-4 mt-3">
 <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-<button onclick="filterCategory('ALL')" class="cat-pill bg-black dark:bg-white text-white dark:text-black text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap shadow-sm">All</button>
+<button onclick="filterCategory('ALL')" class="cat-pill bg-black dark:bg-white text-white dark:text-black text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap">All</button>
 <button onclick="filterCategory('HOMME')" class="cat-pill bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap">Homme</button>
 <button onclick="filterCategory('FEMME')" class="cat-pill bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap">Femme</button>
 <button onclick="filterCategory('COSMETIQUES')" class="cat-pill bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase whitespace-nowrap">Cosmétiques</button>
 </div>
 </div>
 
-<!-- SECTION AI MODE UNIQUE & COMPLET -->
+<!-- SECTION AI MODE -->
 <div id="section-ai-mode" class="hidden max-w-4xl mx-auto px-4 my-6 w-full">
 <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-xl overflow-hidden flex flex-col h-[550px]">
-<!-- En-tête AI Mode -->
 <div class="bg-gradient-to-r from-red-600 to-black text-white p-4 flex items-center justify-between">
-<div class="flex items-center gap-3">
-<i class="fa-solid fa-brain text-2xl text-red-400 animate-pulse"></i>
-<div>
-<h2 class="text-xs font-black uppercase tracking-wider">Cerveau Autonome TATAW x OFFX</h2>
-<p class="text-[10px] text-gray-300">Multilingue • Analyse de fichiers & Vocale • Génération d'images (Max 5/jour)</p>
-</div>
-</div>
-</div>
-
-<!-- Boîte de discussion AI Mode -->
-<div id="aiMessages" class="p-4 flex-grow overflow-y-auto space-y-3 text-xs">
-<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%]">
-Yo ! Bienvenue dans l'espace IA de TATAW x OFFX. Posez vos questions, envoyez une image, un fichier ou un message vocal, ou demandez la création d'un visuel streetwear !
-</div>
-</div>
-
-<!-- Barre d'outils et saisie AI Mode -->
-<div class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex items-center gap-2">
-<!-- Bouton Téléversement Fichier / Image / Audio -->
-<label class="cursor-pointer p-2.5 bg-gray-200 dark:bg-gray-800 rounded-xl text-gray-700 dark:text-gray-300 hover:text-red-600 transition" title="Envoyer une image, un fichier ou un vocal">
-<i class="fa-solid fa-paperclip text-sm"></i>
-<input type="file" id="aiFileInput" class="hidden" onchange="uploadFileToAi(event)">
+<div class="flex items-center gap-3"><i class="fa-solid fa-brain text-2xl text-red-400 animate-pulse"></i><div><h2 class="text-xs font-black uppercase">Cerveau Autonome TATAW x OFFX</h2></div></div>
+<label class="cursor-pointer bg-white/20 hover:bg-white/35 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+  <i class="fa-solid fa-paperclip"></i> <span>Joindre images</span>
+  <input type="file" id="aiFileInput" multiple accept="image/*,audio/*" class="hidden" onchange="uploadFilesToAi(event)">
 </label>
-
-<!-- Champ texte -->
-<input type="text" id="aiInput" placeholder="Posez votre question ou tapez /image [description]..." class="flex-grow text-xs p-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 outline-none dark:text-white" onkeypress="if(event.key==='Enter') sendAiMessage()">
-
-<!-- Bouton Envoyer -->
-<button onclick="sendAiMessage()" class="bg-black dark:bg-white text-white dark:text-black font-bold px-4 py-3 rounded-xl text-xs uppercase shadow">
-<i class="fa-solid fa-paper-plane"></i>
-</button>
+</div>
+<div id="aiMessages" class="p-4 flex-grow overflow-y-auto space-y-3 text-xs">
+<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%]">Yo ! Posez vos questions ou envoyez des visuels à l'IA TATAW x OFFX.</div>
+</div>
+<div class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex items-center gap-2">
+<input type="text" id="aiInput" placeholder="Posez votre question..." class="flex-grow text-xs p-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 outline-none dark:text-white" onkeypress="if(event.key==='Enter') sendAiMessage()">
+<button onclick="sendAiMessage()" class="bg-black dark:bg-white text-white dark:text-black font-bold px-4 py-3 rounded-xl text-xs uppercase"><i class="fa-solid fa-paper-plane"></i></button>
 </div>
 </div>
 </div>
@@ -122,22 +126,22 @@ Yo ! Bienvenue dans l'espace IA de TATAW x OFFX. Posez vos questions, envoyez un
 <h2 class="text-sm font-black uppercase mb-3 text-red-500">🔥 NOUVEAUTÉS DE LA SEMAINE</h2>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
 {% for product in featured_products %}
-<div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-800 p-3 flex flex-col shadow-sm">
+<div onclick="openProductPage('{{ product.id }}')" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-800 p-3 flex flex-col shadow-sm cursor-pointer hover:border-red-500 transition">
 <img src="{{ product.image_url }}" class="w-full h-32 object-cover rounded-xl mb-2">
 <h3 class="text-xs font-bold truncate">{{ product.name }}</h3>
-<p class="text-xs font-black text-red-500 mb-2">{% if product.price %}{{ product.price }}{% else %}Sur demande{% endif %} FCFA</p>
-<button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price }}')" class="mt-auto bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold py-1.5 rounded-lg uppercase">Ajouter</button>
+<p class="text-xs font-black text-red-500 mt-1">{{ product.price }} FCFA</p>
 </div>
 {% endfor %}
 </div>
 </div>
 
-<!-- SECTION NOTRE HISTOIRE -->
+<!-- SECTION NOTRE HISTOIRE (OFFX & NYBE) -->
 <div id="section-bio" class="hidden max-w-2xl mx-auto my-8 p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-800 shadow-sm text-center">
 <span class="bg-red-100 text-red-600 text-[10px] font-black px-3 py-1 rounded-full uppercase">À propos de TATAW x OFFX</span>
-<h3 class="text-lg font-black uppercase text-gray-900 dark:text-white mt-3 mb-2">L'Amour qui ne s'efface jamais ✨</h3>
-<p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
-Plateforme mobile commerce de pointe fondée à Yaoundé. Alliance parfaite entre design d'avant-garde et automatisation intelligente.
+<h3 class="text-lg font-black uppercase text-gray-900 dark:text-white mt-3 mb-2">Notre Histoire ✨</h3>
+<p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-4 text-left">
+TATAW est le fruit de la rencontre et de la vision commune de deux frères : <b>offx & nybe</b>.<br><br>
+Dans les traditions nomades, TATAW représente l'étoile guidante, le point de repère à travers le parcours. Né de la réunion entre l'héritage familial de <b>nybe</b> et la quête d'<b>offx</b> à promouvoir cet héritage dans un esprit de joie, de force et d'excellence, ce projet et cette collaboration incarnent notre boussole pour construire l'avenir ensemble.
 </p>
 <button onclick="switchTab('articles')" class="bg-black text-white dark:bg-white dark:text-black text-xs font-bold py-2.5 px-6 rounded-xl uppercase shadow">Voir les Collections 🛒</button>
 </div>
@@ -146,12 +150,14 @@ Plateforme mobile commerce de pointe fondée à Yaoundé. Alliance parfaite entr
 <main id="section-articles" class="max-w-6xl mx-auto px-4 py-2 flex-grow w-full">
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
 {% for product in products %}
-<div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm flex flex-col" data-category="{{ product.category|upper }}" data-name="{{ product.name|lower }}" data-description="{{ product.description|lower }}">
+<div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm flex flex-col cursor-pointer transition transform hover:-translate-y-1" 
+     onclick="openProductPage('{{ product.id }}')"
+     data-category="{{ product.category|upper }}" 
+     data-name="{{ product.name|lower }}" 
+     data-description="{{ product.description|lower }}"
+     data-search="{{ product.name|lower }} {{ product.category|lower }} {{ product.subcategory|lower }} {{ product.description|lower }} {{ product.options|lower }}">
 <div class="relative pt-[100%] bg-gray-100 dark:bg-gray-800">
-<img id="main-img-{{ product.id }}" src="{{ product.image_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300">
-{% if product.promo_info %}
-<span class="absolute top-2 right-2 bg-yellow-400 text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase z-10 shadow">{{ product.promo_info }}</span>
-{% endif %}
+<img src="{{ product.image_url }}" alt="{{ product.name }}" class="absolute inset-0 w-full h-full object-cover">
 {% if not product.in_stock %}
 <span class="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase z-10">En Rupture</span>
 {% else %}
@@ -160,124 +166,72 @@ Plateforme mobile commerce de pointe fondée à Yaoundé. Alliance parfaite entr
 </div>
 <div class="p-4 flex flex-col flex-grow">
 <p class="text-[10px] font-bold uppercase text-red-600 mb-1">{{ product.category }} • {{ product.subcategory }}</p>
-<h3 class="text-sm font-black text-gray-900 dark:text-white mb-1">{{ product.name }}</h3>
-{% if product.description %}
-<div class="text-xs text-gray-600 dark:text-gray-400 mb-3">
-<span id="desc-short-{{ product.id }}">{{ product.description[:70] }}{% if product.description|length > 70 %}...{% endif %}</span>
-{% if product.description|length > 70 %}
-<span id="desc-full-{{ product.id }}" class="hidden">{{ product.description }}</span>
-<button onclick="toggleDescription('{{ product.id }}')" id="desc-btn-{{ product.id }}" class="text-red-500 font-bold ml-1 text-[10px]">Lire la suite</button>
-{% endif %}
-</div>
-{% endif %}
-
-<!-- SÉLECTEUR DE COULEURS DYNAMIQUE -->
-{% if product.options %}
-<div class="mb-3">
-<label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Options de Couleur :</label>
-<div class="flex flex-wrap gap-1.5 mb-2">
-{% for opt in product.options.split(',') %}
-{% set opt_clean = opt.strip() %}
-<button type="button" 
-onclick="selectProductOption('{{ product.id }}', '{{ opt_clean }}', '{{ product.image_url }}')" 
-class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg border border-gray-300 dark:border-gray-700 transition {% if loop.first %}bg-black text-white dark:bg-white dark:text-black border-transparent{% endif %}">
-{{ opt_clean }}
-</button>
-{% endfor %}
-</div>
-<select id="option-{{ product.id }}" class="hidden">
-{% for opt in product.options.split(',') %}
-<option value="{{ opt.strip() }}">{{ opt.strip() }}</option>
-{% endfor %}
-</select>
-</div>
-{% endif %}
-
-<div class="mt-auto pt-3 border-t border-gray-200 dark:border-gray-800 space-y-2">
-<div class="flex items-center justify-between">
-<span class="text-sm font-black text-gray-900 dark:text-white"><span class="product-price" data-price="{{ product.price }}">{% if product.price %}{{ product.price }}{% else %}Sur demande{% endif %}</span> FCFA</span>
-<button onclick="addToCart('{{ product.id }}', '{{ product.name }}', '{{ product.price }}')" class="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl text-xs font-bold uppercase shadow">
-<i class="fa-solid fa-cart-plus"></i> Ajouter
-</button>
-</div>
-<button onclick="buyNowOneClick('{{ product.name }}', '{{ product.price }}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black text-[10px] py-2 rounded-xl uppercase flex items-center justify-center gap-1.5 shadow">
-<i class="fa-brands fa-whatsapp text-sm"></i> Achat Rapide WhatsApp
-</button>
-</div>
+<h3 class="text-sm font-black text-gray-900 dark:text-white mb-2">{{ product.name }}</h3>
+<p class="text-sm font-black text-gray-900 dark:text-white mt-auto">{{ product.price }} FCFA</p>
 </div>
 </div>
 {% endfor %}
 </div>
 </main>
 
-<!-- BARRE DE NAVIGATION INFÉRIEURE FIXE -->
+<!-- PAGE DÉTAIL PRODUIT PLEIN ÉCRAN -->
+<div id="productDetailPage" class="hidden fixed inset-0 bg-white dark:bg-gray-950 z-50 overflow-y-auto pb-24">
+<div class="sticky top-0 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between z-10">
+<button onclick="closeProductPage()" class="flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-300">
+<i class="fa-solid fa-chevron-left"></i> Retour
+</button>
+<span class="text-xs font-black uppercase text-gray-400 tracking-wider">TATAW x OFFX</span>
+</div>
+
+<div class="max-w-md mx-auto p-4 space-y-6">
+<div class="relative rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-900 aspect-square">
+<img id="detail-img" src="" class="w-full h-full object-cover">
+<span id="detail-stock-badge" class="absolute top-3 left-3 text-[10px] font-black px-2.5 py-1 rounded-full uppercase"></span>
+</div>
+
+<div>
+<h1 id="detail-name" class="text-lg font-black uppercase text-gray-900 dark:text-white"></h1>
+<p id="detail-price" class="text-base font-black text-gray-900 dark:text-white mt-1"></p>
+</div>
+
+<hr class="border-gray-200 dark:border-gray-800">
+
+<div>
+<p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Description</p>
+<p id="detail-desc" class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed"></p>
+</div>
+
+<div>
+<label class="text-[10px] font-bold text-gray-400 uppercase block mb-2">Couleur :</label>
+<div id="detail-colors" class="flex flex-wrap gap-2"></div>
+</div>
+
+<div>
+<label class="text-[10px] font-bold text-gray-400 uppercase block mb-2">Taille <span class="text-red-500">*</span></label>
+<div id="detail-sizes" class="flex flex-wrap gap-2"></div>
+</div>
+
+<div class="flex items-center justify-between pt-2">
+<span class="text-xs font-bold uppercase text-gray-500">Quantité :</span>
+<div class="flex items-center gap-3 bg-gray-100 dark:bg-gray-800 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700">
+<button onclick="changeQty(-1)" class="w-7 h-7 font-bold text-sm bg-white dark:bg-gray-900 rounded-lg">-</button>
+<span id="detail-qty" class="text-xs font-bold px-2">1</span>
+<button onclick="changeQty(1)" class="w-7 h-7 font-bold text-sm bg-white dark:bg-gray-900 rounded-lg">+</button>
+</div>
+</div>
+
+<div class="pt-4">
+<button id="detail-action-btn" onclick="addCurrentToCart()" class="w-full bg-black dark:bg-white text-white dark:text-black font-black text-xs py-3.5 rounded-2xl uppercase shadow-lg transition">
+Ajouter au panier
+</button>
+</div>
+</div>
+</div>
+
+<!-- NAVIGATION INFÉRIEURE -->
 <div class="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-40 px-6 py-2.5 flex items-center justify-around shadow-lg">
-<a href="/" class="flex flex-col items-center text-red-600 text-xs font-bold">
-<i class="fa-solid fa-house text-lg mb-0.5"></i>
-<span>Accueil</span>
-</a>
-<button onclick="toggleCart()" class="flex flex-col items-center text-gray-600 dark:text-gray-400 text-xs font-bold relative">
-<i class="fa-solid fa-bag-shopping text-lg mb-0.5"></i>
-<span>Panier</span>
-</button>
-<button onclick="openAuthModal()" class="flex flex-col items-center text-gray-600 dark:text-gray-400 text-xs font-bold">
-<i class="fa-solid fa-user text-lg mb-0.5"></i>
-<span>Mon Compte</span>
-</button>
-</div>
-
-<!-- MODAL AUTHENTIFICATION -->
-<div id="authModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-<div class="bg-white dark:bg-gray-900 rounded-3xl p-6 max-w-sm w-full relative border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white shadow-2xl">
-<button onclick="closeAuthModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
-<h3 class="text-sm font-black uppercase mb-2 text-red-600 text-center">Connexion Mon Compte</h3>
-<p class="text-[11px] text-gray-500 text-center mb-4">Accédez à vos commandes, alertes nouveautés et favoris.</p>
-<form action="/login-auth" method="POST" class="space-y-3 text-xs">
-<div>
-<label class="block text-gray-500 mb-1 font-bold uppercase">Nom d'utilisateur :</label>
-<input type="text" name="username" required class="w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-950 border border-gray-700 font-bold outline-none">
-</div>
-<div>
-<label class="block text-gray-500 mb-1 font-bold uppercase">Numéro WhatsApp :</label>
-<input type="text" name="phone" placeholder="+237..." class="w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-950 border border-gray-700 font-bold outline-none">
-</div>
-<div>
-<label class="block text-gray-500 mb-1 font-bold uppercase">E-mail (Notifications) :</label>
-<input type="email" name="email" placeholder="votre@email.com" class="w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-950 border border-gray-700 font-bold outline-none">
-</div>
-<input type="hidden" name="login_method" id="loginMethodInput" value="whatsapp">
-<div class="pt-2 space-y-2">
-<button type="submit" onclick="setLoginMethod('whatsapp')" class="w-full bg-green-600 text-white font-bold py-2.5 rounded-xl uppercase flex items-center justify-center gap-2 shadow">
-<i class="fa-brands fa-whatsapp"></i> Se connecter via WhatsApp
-</button>
-<button type="submit" onclick="setLoginMethod('google')" class="w-full bg-white text-black border border-gray-300 font-bold py-2.5 rounded-xl uppercase flex items-center justify-center gap-2 shadow-sm">
-<i class="fa-brands fa-google text-red-500"></i> Continuer avec Google
-</button>
-</div>
-</form>
-</div>
-</div>
-
-<!-- MODAL PARAMÈTRES -->
-<div id="settingsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-<div class="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full relative border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
-<button onclick="closeSettingsModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
-<h3 class="text-sm font-black uppercase mb-4 text-red-600">Paramètres</h3>
-<div class="space-y-4 text-xs">
-<div>
-<label class="block text-gray-500 mb-1 font-bold uppercase">Devise :</label>
-<select id="currencySelect" onchange="changeCurrency()" class="w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-950 border border-gray-700 font-bold outline-none">
-<option value="FCFA">FCFA (Franc CFA)</option>
-<option value="EUR">EUR (€)</option>
-<option value="USD">USD ($)</option>
-</select>
-</div>
-<div>
-<label class="block text-gray-500 mb-1 font-bold uppercase">Mode Visuel :</label>
-<button onclick="toggleDarkMode()" class="w-full bg-black dark:bg-white text-white dark:text-black py-2.5 rounded-xl font-bold uppercase shadow">Basculer Clair / Sombre 🌓</button>
-</div>
-</div>
-</div>
+<a href="/" class="flex flex-col items-center text-red-600 text-xs font-bold"><i class="fa-solid fa-house text-lg mb-0.5"></i><span>Accueil</span></a>
+<button onclick="toggleCart()" class="flex flex-col items-center text-gray-600 dark:text-gray-400 text-xs font-bold"><i class="fa-solid fa-bag-shopping text-lg mb-0.5"></i><span>Panier</span></button>
 </div>
 
 <!-- PANIER SIDEBAR -->
@@ -289,12 +243,12 @@ class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase 
 <div id="cart-items" class="flex-grow overflow-y-auto py-3 space-y-2"></div>
 <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl my-2 border border-gray-100 dark:border-gray-700 space-y-2">
 <div>
-<label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Livraison</label>
+<label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Livraison (Précision livreur)</label>
 <select id="shippingCity" onchange="renderCart()" class="w-full text-xs p-2 rounded-lg bg-white dark:bg-gray-900 border dark:border-gray-700 font-bold outline-none">
-<option value="0">🏪 Retrait boutique (Gratuit)</option>
-<option value="1500" selected>🚚 Yaoundé (1 000 FCFA)</option>
+<option value="0">🏪 Retrait boutique Yaoundé (Gratuit)</option>
+<option value="1500" selected>🚚 Yaoundé (1 500 FCFA)</option>
 <option value="2500">🚚 Douala (2 500 FCFA)</option>
-<option value="3500">✈️ Autres Régions (3 000 FCFA)</option>
+<option value="3500">✈️ Autres Régions (3 500 FCFA)</option>
 </select>
 </div>
 <div class="space-y-1 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs">
@@ -308,26 +262,17 @@ class="option-pill-{{ product.id }} px-2.5 py-1 text-[10px] font-bold uppercase 
 </button>
 </div>
 
-<!-- SCRIPTS JAVASCRIPT -->
+<!-- SCRIPT -->
 <script>
 async function checkServerAwake() {
   const wakeScreen = document.getElementById('serverWakeScreen');
   const wakeTimer = document.getElementById('wakeTimer');
-  let secondsWaited = 0;
-  const timer = setInterval(() => {
-    secondsWaited++;
-    wakeTimer.innerText = `Temps d'attente : ${secondsWaited}s...`;
-  }, 1000);
-
+  let seconds = 0;
+  const timer = setInterval(() => { seconds++; wakeTimer.innerText = `Connexion : ${seconds}s...`; }, 1000);
   while (true) {
     try {
       const res = await fetch('/api/ping');
-      if (res.ok) {
-        clearInterval(timer);
-        wakeScreen.style.opacity = '0';
-        setTimeout(() => wakeScreen.classList.add('hidden'), 700);
-        break;
-      }
+      if (res.ok) { clearInterval(timer); wakeScreen.style.opacity = '0'; setTimeout(() => wakeScreen.classList.add('hidden'), 700); break; }
     } catch (e) {}
     await new Promise(r => setTimeout(r, 2000));
   }
@@ -335,15 +280,7 @@ async function checkServerAwake() {
 checkServerAwake();
 
 let cart = JSON.parse(localStorage.getItem('tataw_cart')) || [];
-let isDarkMode = localStorage.getItem('tataw_dark') === 'true';
-if (isDarkMode) document.documentElement.classList.add('dark');
 renderCart();
-
-function toggleDarkMode() {
-  isDarkMode = !isDarkMode;
-  localStorage.setItem('tataw_dark', isDarkMode);
-  document.documentElement.classList.toggle('dark', isDarkMode);
-}
 
 function switchTab(tab) {
   ['ai-mode', 'news', 'articles', 'bio'].forEach(t => {
@@ -358,141 +295,127 @@ function switchTab(tab) {
   if(targetBtn) targetBtn.className = "py-2 px-1 rounded-xl text-[10px] font-black uppercase transition-all bg-black text-white dark:bg-white dark:text-black shadow";
 }
 
-function toggleDescription(id) {
-  const shortDesc = document.getElementById(`desc-short-${id}`);
-  const fullDesc = document.getElementById(`desc-full-${id}`);
-  const btn = document.getElementById(`desc-btn-${id}`);
-  if (fullDesc.classList.contains('hidden')) {
-    fullDesc.classList.remove('hidden');
-    shortDesc.classList.add('hidden');
-    btn.innerText = "Réduire";
-  } else {
-    fullDesc.classList.add('hidden');
-    shortDesc.classList.remove('hidden');
-    btn.innerText = "Lire la suite";
-  }
-}
-
-function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
-function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
-function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
-function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
-function setLoginMethod(method) { document.getElementById('loginMethodInput').value = method; }
 function toggleCart() { document.getElementById('cartSidebar').classList.toggle('translate-x-full'); }
 
-function selectProductOption(productId, optionValue, imageUrl) {
-  const selectElem = document.getElementById(`option-${productId}`);
-  if (selectElem) selectElem.value = optionValue;
-  if (imageUrl) {
-    const mainImg = document.getElementById(`main-img-${productId}`);
-    if (mainImg) mainImg.src = imageUrl;
+let currentSlide = 0;
+function showSlide(index) {
+  const slides = document.querySelectorAll('.hero-slide');
+  if(slides.length === 0) return;
+  slides.forEach((slide, i) => { 
+    slide.style.opacity = i === index ? '1' : '0'; 
+    slide.style.zIndex = i === index ? '10' : '0';
+  });
+}
+function nextSlide() { 
+  const slides = document.querySelectorAll('.hero-slide'); 
+  if(slides.length === 0) return; 
+  currentSlide = (currentSlide + 1) % slides.length; 
+  showSlide(currentSlide); 
+}
+function prevSlide() { 
+  const slides = document.querySelectorAll('.hero-slide'); 
+  if(slides.length === 0) return; 
+  currentSlide = (currentSlide - 1 + slides.length) % slides.length; 
+  showSlide(currentSlide); 
+}
+setInterval(nextSlide, 4500);
+
+let currentProduct = {};
+let productVariants = [];
+let selectedColor = '';
+let selectedSize = '';
+let currentQty = 1;
+
+async function openProductPage(productId) {
+  try {
+    const res = await fetch(`/api/product-details/${productId}`);
+    const data = await res.json();
+    currentProduct = data;
+    
+    const varRes = await fetch(`/api/product-variants/${productId}`);
+    const varData = await varRes.json();
+    productVariants = varData.variants || [];
+
+    document.getElementById('detail-name').innerText = data.name;
+    document.getElementById('detail-price').innerText = data.price + ' FCFA';
+    document.getElementById('detail-img').src = data.image_url;
+    document.getElementById('detail-desc').innerText = data.description || 'Aucune description.';
+    document.getElementById('detail-qty').innerText = '1';
+    currentQty = 1;
+    selectedSize = '';
+
+    const badge = document.getElementById('detail-stock-badge');
+    badge.innerText = data.in_stock ? 'En Stock' : 'En Rupture';
+    badge.className = `absolute top-3 left-3 text-[10px] font-black px-2.5 py-1 rounded-full uppercase ${data.in_stock ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`;
+
+    const colorsContainer = document.getElementById('detail-colors');
+    colorsContainer.innerHTML = '';
+    const colorsList = data.options ? data.options.split(',') : ['Standard'];
+    selectedColor = colorsList[0].trim();
+
+    colorsList.forEach((col, idx) => {
+      const cName = col.trim();
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `color-btn px-3 py-1.5 text-xs font-bold rounded-xl border border-gray-300 dark:border-gray-700 ${idx === 0 ? 'bg-black text-white dark:bg-white dark:text-black' : ''}`;
+      btn.innerText = cName;
+      btn.onclick = () => {
+        document.querySelectorAll('.color-btn').forEach(b => b.className = 'color-btn px-3 py-1.5 text-xs font-bold rounded-xl border border-gray-300 dark:border-gray-700');
+        btn.className = 'color-btn px-3 py-1.5 text-xs font-bold rounded-xl border border-gray-300 dark:border-gray-700 bg-black text-white dark:bg-white dark:text-black';
+        selectedColor = cName;
+        updateSizeAvailability();
+      };
+      colorsContainer.appendChild(btn);
+    });
+
+    updateSizeAvailability();
+    document.getElementById('productDetailPage').classList.remove('hidden');
+  } catch (e) {
+    alert("Erreur lors du chargement de l'article.");
   }
 }
 
-function changeCurrency() {
-  const cur = document.getElementById('currencySelect').value;
-  document.querySelectorAll('.product-price').forEach(el => {
-    let val = el.dataset.price;
-    if(!val) return;
-    if(cur === 'EUR') el.innerText = (parseInt(val) / 655.957).toFixed(1) + " €";
-    else if(cur === 'USD') el.innerText = (parseInt(val) / 600).toFixed(1) + " $";
-    else el.innerText = val;
+function closeProductPage() { document.getElementById('productDetailPage').classList.add('hidden'); }
+
+function updateSizeAvailability() {
+  const sizes = ['S', 'M', 'L', 'XL'];
+  const sizesContainer = document.getElementById('detail-sizes');
+  sizesContainer.innerHTML = '';
+
+  sizes.forEach(size => {
+    const variant = productVariants.find(v => v.color.toLowerCase() === selectedColor.toLowerCase() && v.size.toUpperCase() === size);
+    const stock = variant ? variant.stock_qty : 2;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `size-btn px-4 py-2 text-xs font-bold rounded-xl border transition ${selectedSize === size ? 'bg-black text-white dark:bg-white dark:text-black border-transparent' : 'border-gray-300 dark:border-gray-700'}`;
+    
+    if (stock <= 0) {
+      btn.innerHTML = `${size} <span class="text-[9px] text-red-500 block">Épuisé</span>`;
+      btn.disabled = true;
+      btn.classList.add('opacity-40', 'cursor-not-allowed');
+    } else if (stock === 1) {
+      btn.innerHTML = `${size} <span class="text-[9px] text-yellow-500 pulse-urgent block">Dernière pièce !</span>`;
+      btn.onclick = () => selectSize(size);
+    } else {
+      btn.innerText = size;
+      btn.onclick = () => selectSize(size);
+    }
+    sizesContainer.appendChild(btn);
   });
 }
 
-async function handleVisualSearch(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const formData = new FormData();
-  formData.append('file', file);
-  alert("Analyse visuelle par IA en cours...");
-  try {
-    const res = await fetch('/api/visual-search', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.analysis) {
-      alert("Résultat analyse visuelle : " + data.analysis);
-    }
-  } catch (e) {
-    alert("Erreur lors de l'analyse visuelle.");
-  }
-}
+function selectSize(size) { selectedSize = size; updateSizeAvailability(); }
+function changeQty(delta) { currentQty = Math.max(1, currentQty + delta); document.getElementById('detail-qty').innerText = currentQty; }
 
-// Gestion de l'AI Mode (Texte, Génération d'images avec quota, Fichiers, Vocaux)
-async function sendAiMessage() {
-  const input = document.getElementById('aiInput');
-  const text = input.value.trim();
-  if (!text) return;
-  const chatBox = document.getElementById('aiMessages');
-  chatBox.innerHTML += `<div class="bg-black text-white p-2.5 rounded-2xl ml-auto max-w-[80%] text-right">${text}</div>`;
-  input.value = '';
-
-  // Vérifier si c'est une demande de génération d'image
-  if (text.startsWith('/image ')) {
-    const prompt = text.replace('/image ', '');
-    try {
-      const res = await fetch('/api/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: prompt })
-      });
-      const data = await res.json();
-      if (res.status === 429) {
-        chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2 font-bold">${data.error}</div>`;
-      } else if (data.result) {
-        chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2"><strong>Visuel généré (${data.quota_used}/${data.quota_max} aujourd'hui) :</strong><br>${data.result}</div>`;
-      }
-    } catch (e) {
-      chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2">Erreur lors de la génération de l'image.</div>`;
-    }
-  } else {
-    try {
-      const res = await fetch('/api/ai-assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
-      });
-      const data = await res.json();
-      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2">${data.reply}</div>`;
-    } catch (e) {
-      chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2">Erreur de communication avec le cerveau TATAW.</div>`;
-    }
-  }
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// Téléversement de fichiers / images / audios dans AI Mode
-async function uploadFileToAi(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const chatBox = document.getElementById('aiMessages');
-  chatBox.innerHTML += `<div class="bg-gray-200 dark:bg-gray-800 p-2.5 rounded-2xl text-gray-500 italic max-w-[80%]">Analyse du fichier/audio par l'IA en cours...</div>`;
-
-  try {
-    const res = await fetch('/api/analyze-file', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.analysis) {
-      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2"><strong>Analyse Image :</strong><br>${data.analysis}</div>`;
-    } else if (data.transcription_and_reply) {
-      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2"><strong>Transcription & Réponse Vocale :</strong><br>${data.transcription_and_reply}</div>`;
-    } else if (data.error) {
-      chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2">${data.error}</div>`;
-    }
-  } catch (e) {
-    chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2">Erreur lors de l'envoi du fichier.</div>`;
-  }
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function addToCart(id, name, price) {
-  const optElem = document.getElementById(`option-${id}`);
-  const selectedOption = optElem ? optElem.value : 'Standard';
-  cart.push({ id, name, price, option: selectedOption });
+function addCurrentToCart() {
+  if (!selectedSize) { alert("Veuillez sélectionner une taille (S, M, L, XL)."); return; }
+  const itemOption = `${selectedColor} / Taille ${selectedSize} (x${currentQty})`;
+  cart.push({ id: currentProduct.id, name: currentProduct.name, price: currentProduct.price, option: itemOption });
   localStorage.setItem('tataw_cart', JSON.stringify(cart));
   renderCart();
+  closeProductPage();
+  toggleCart();
 }
 
 function renderCart() {
@@ -502,7 +425,7 @@ function renderCart() {
   itemsContainer.innerHTML = cart.map((item, i) => {
     let numPrice = parseInt(String(item.price).replace(/[^0-9]/g, '')) || 0;
     subtotal += numPrice;
-    return `<div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl"><div><p class="font-bold">${item.name} (${item.option})</p><p class="text-red-600">${item.price} FCFA</p></div><button onclick="cart.splice(${i},1);localStorage.setItem('tataw_cart',JSON.stringify(cart));renderCart();" class="text-red-500 font-bold">✕</button></div>`;
+    return `<div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl"><div><p class="font-bold">${item.name}</p><p class="text-[10px] text-gray-400">${item.option}</p><p class="text-red-600">${item.price} FCFA</p></div><button onclick="cart.splice(${i},1);localStorage.setItem('tataw_cart',JSON.stringify(cart));renderCart();" class="text-red-500 font-bold">✕</button></div>`;
   }).join('');
   const shippingCost = parseInt(document.getElementById('shippingCity').value) || 0;
   document.getElementById('cart-subtotal').innerText = subtotal.toLocaleString() + " FCFA";
@@ -510,13 +433,10 @@ function renderCart() {
   document.getElementById('cart-total').innerText = (subtotal + shippingCost).toLocaleString() + " FCFA";
 }
 
-function buyNowOneClick(name, price) {
-  window.open(`https://wa.me/237653848517?text=Bonjour,%20achat%20rapide%20de%20*${name}*%20(${price}%20FCFA)`, '_blank');
-}
-
 function sendWhatsAppOrder() {
   if (cart.length === 0) return alert("Votre panier est vide !");
-  let msg = "Bonjour TATAW x OFFX ! 👋%0AJ'aimerais passer une commande :%0A" + cart.map(i => `- ${i.name} (${i.option}) : ${i.price} FCFA`).join('%0A');
+  let shippingText = document.getElementById('shippingCity').selectedOptions[0].text;
+  let msg = `Bonjour TATAW x OFFX ! 👋%0AJ'aimerais valider ma commande :%0A` + cart.map(i => `- ${i.name} [${i.option}] : ${i.price} FCFA`).join('%0A') + `%0A%0A*Livraison :* ${shippingText}`;
   window.open(`https://wa.me/237653848517?text=${msg}`, '_blank');
 }
 
@@ -527,11 +447,96 @@ function filterCategory(cat) {
 }
 
 function filterProducts() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
   document.querySelectorAll('.product-card').forEach(card => {
-    const match = card.dataset.name.includes(q) || card.dataset.description.includes(q);
-    card.classList.toggle('hidden', !match);
+    const searchData = card.getAttribute('data-search') || '';
+    if (!query || searchData.includes(query)) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
   });
+}
+
+let chatHistory = [];
+
+async function sendAiMessage() {
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if(!text) return;
+  const chatBox = document.getElementById('aiMessages');
+  chatBox.innerHTML += `<div class="bg-black text-white p-3 rounded-2xl ml-auto max-w-[85%] text-right text-xs shadow">${text}</div>`;
+  input.value = '';
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  chatHistory.push({ sender: 'user', text: text });
+
+  try {
+    const res = await fetch('/api/ai-assistant', { 
+      method: 'POST', 
+      headers: {'Content-Type': 'application/json'}, 
+      body: JSON.stringify({ message: text, history: chatHistory }) 
+    });
+    const data = await res.json();
+    
+    chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3.5 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[90%] text-xs leading-relaxed shadow">${data.reply}</div>`;
+    chatHistory.push({ sender: 'ai', text: data.reply });
+  } catch(e) {
+    chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-3 rounded-2xl max-w-[85%] text-xs">Erreur de communication avec le cerveau TATAW.</div>`;
+  }
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function uploadFilesToAi(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+
+  const chatBox = document.getElementById('aiMessages');
+  const formData = new FormData();
+  for (let i = 0; i < files.length; i++) {
+    formData.append('file', files[i]);
+  }
+
+  chatBox.innerHTML += `<div class="bg-gray-200 dark:bg-gray-800 p-2.5 rounded-2xl text-gray-500 italic max-w-[80%] text-xs">Analyse de ${files.length} fichier(s) en cours...</div>`;
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  try {
+    const res = await fetch('/api/analyze-file', { method: 'POST', body: formData });
+    const data = await res.json();
+    
+    if (data.analysis) {
+      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[85%] mt-2 text-xs"><strong>Analyse IA :</strong><br>${data.analysis}</div>`;
+    } else if (data.error) {
+      chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2 text-xs">Erreur : ${data.error}</div>`;
+    }
+  } catch (e) {
+    chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-2.5 rounded-2xl max-w-[85%] mt-2 text-xs">Erreur lors de l'envoi des fichiers.</div>`;
+  }
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function searchUploadImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  switchTab('ai-mode');
+  const chatBox = document.getElementById('aiMessages');
+  chatBox.innerHTML += `<div class="bg-black text-white p-3 rounded-2xl ml-auto max-w-[85%] text-right text-xs shadow">📸 Image envoyée : ${file.name}</div>`;
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/analyze-file', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.analysis) {
+      chatBox.innerHTML += `<div class="bg-gray-100 dark:bg-gray-800 p-3.5 rounded-2xl text-gray-800 dark:text-gray-200 max-w-[90%] text-xs leading-relaxed shadow"><strong>Analyse IA :</strong><br>${data.analysis}</div>`;
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+  } catch (e) {
+    chatBox.innerHTML += `<div class="bg-red-100 text-red-600 p-3 rounded-2xl max-w-[85%] text-xs">Erreur d'analyse.</div>`;
+  }
 }
 </script>
 </body>

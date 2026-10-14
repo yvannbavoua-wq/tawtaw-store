@@ -107,7 +107,7 @@
       </form>
     </div>
 
-    <!-- 4. CATALOGUE ACTUEL -->
+    <!-- 4. CATALOGUE ACTUEL & MODIFICATION RAPIDE -->
     <h2 class="text-xs font-bold uppercase mb-4 text-gray-400">Catalogue Actuel</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       {% for p in products %}
@@ -121,9 +121,37 @@
                 <button type="submit" class="text-red-500 hover:text-red-400 p-1">✕</button>
               </form>
             </div>
-            <p class="text-gray-400 mb-1 font-mono">{{ p.price }} FCFA</p>
+            <p class="text-gray-400 mb-1 font-mono">{{ p.price }} FCFA (Stock: {{ p.stock_qty }})</p>
             <p class="text-[10px] text-gray-500">Couleurs : {{ p.options }}</p>
           </div>
+        </div>
+
+        <!-- Bloc de modification rapide -->
+        <div class="bg-gray-950/60 p-3 rounded-xl border border-gray-800 mt-2">
+          <h4 class="text-[11px] font-bold text-red-400 uppercase mb-2">Modifier l'article</h4>
+          <form action="/admin/update-product/{{ p.id }}" method="POST" enctype="multipart/form-data" class="space-y-2">
+            <div>
+              <label class="text-[10px] text-gray-400">Nom :</label>
+              <input type="text" name="name" value="{{ p.name }}" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-gray-400">Prix (FCFA) :</label>
+                <input type="text" name="price" value="{{ p.price }}" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white">
+              </div>
+              <div>
+                <label class="text-[10px] text-gray-400">Stock :</label>
+                <input type="number" name="stock_qty" value="{{ p.stock_qty }}" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white">
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] text-gray-400">Changer l'image :</label>
+              <input type="file" name="image" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-gray-800 file:text-white">
+            </div>
+            <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 rounded-lg text-xs transition">
+              ENREGISTRER LES MODIFICATIONS 💾
+            </button>
+          </form>
         </div>
       </div>
       {% endfor %}
