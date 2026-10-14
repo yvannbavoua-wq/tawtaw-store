@@ -10,7 +10,7 @@ class TatawMemoryAI:
             "Né de la réunion entre l'héritage familial de nybe et la quête d'offx à promouvoir cet héritage."
         )
         self.streetwear_expertise = (
-            "Culture et stylisme streetwear : Maîtrise des coupes oversize et boxy fit, layering (superposition), "
+            "Culture et stylisme streetwear : Maîtrise totale des coupes oversize et boxy fit, layering (superposition), "
             "association des couleurs neutres et vives, coupes lourdes (heavyweight cotton), minimalisme urbain "
             "et tendances streetwear de Yaoundé / Douala à l'international."
         )
@@ -39,6 +39,10 @@ class TatawMemoryAI:
             return (
                 f"--- HISTOIRE ET VALEURS DE LA MARQUE ---\n{self.brand_story}\n\n"
                 f"--- EXPERTISE CULTURE STREETWEAR & MODE ---\n{self.streetwear_expertise}\n\n"
+                f"--- CAPACITÉS AVANCÉES DE LIA ---\n"
+                f"- Multilinguisme total : Détecte et s'exprime couramment en Français, Anglais, Pidgin et dans n'importe quelle autre langue demandée.\n"
+                f"- Analyse multimodale : Capable d'analyser en profondeur les images (vêtements, accessoires, looks) et les notes vocales.\n"
+                f"- Génération de visuels : Capable de concevoir des concepts artistiques et des descriptions de designs streetwear inédits.\n\n"
                 f"--- CATALOGUE COMPLET ET STOCKS EN TEMPS RÉEL ---\n{full_catalog}"
             )
         except Exception as e:
@@ -60,4 +64,5 @@ class TatawMemoryAI:
         
         self.image_quotas[user_key] = current_count + 1
         return True, self.image_quotas[user_key]
-  tataw_brain = TatawMemoryAI()
+
+tataw_brain = TatawMemoryAI()
