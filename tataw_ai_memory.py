@@ -60,5 +60,4 @@ class TatawMemoryAI:
         
         self.image_quotas[user_key] = current_count + 1
         return True, self.image_quotas[user_key]
-
-tataw_brain = TatawMemoryAI()
+  tataw_brain = TatawMemoryAI()
