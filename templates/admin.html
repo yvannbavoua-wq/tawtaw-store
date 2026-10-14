@@ -6,7 +6,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-950 text-white p-6 min-h-screen font-sans">
-  <div class="max-w-4xl mx-auto">
+  <div class="max-w-5xl mx-auto">
     <div class="flex items-center justify-between mb-8 border-b border-gray-800 pb-4">
       <div>
         <h1 class="text-xl font-black tracking-wider uppercase text-red-500">ADMINISTRATION TATAW x OFFX</h1>
@@ -19,20 +19,51 @@
       </div>
     </div>
 
+    <!-- 0. RAPPORT & CENTRE DE CONTRÔLE DE L'IA (LIA) -->
+    <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 mb-8 shadow-xl">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xs font-bold uppercase text-red-500 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+          🧠 Centre de Contrôle & Rapport de l'IA (Lia)
+        </h2>
+        <button type="button" onclick="loadLiaReport()" class="text-[10px] bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded-lg uppercase font-bold">
+          🔄 Actualiser
+        </button>
+      </div>
+      <div id="liaReportContainer" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+          <p class="text-[10px] text-gray-500 uppercase">Statut IA</p>
+          <p id="liaStatus" class="font-bold text-green-400">Opérationnel</p>
+        </div>
+        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+          <p class="text-[10px] text-gray-500 uppercase">Modèle Moteur</p>
+          <p id="liaModel" class="font-bold text-gray-300">gemini-2.5-flash</p>
+        </div>
+        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+          <p class="text-[10px] text-gray-500 uppercase">Articles Synchro DB</p>
+          <p id="liaCatalog" class="font-bold text-red-400">{{ products|length }} articles</p>
+        </div>
+        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+          <p class="text-[10px] text-gray-500 uppercase">Interactions Client</p>
+          <p id="liaInteractions" class="font-bold text-yellow-400">Actives</p>
+        </div>
+      </div>
+    </div>
+
     <!-- 1. GESTION DU CARROUSEL MANNEQUINS (HAUT DE PAGE) -->
     <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 mb-8 shadow-xl">
       <h2 class="text-xs font-bold uppercase mb-3 text-red-400">📸 Visuels Mannequins (Carrousel Haut de Page)</h2>
-      <p class="text-[11px] text-gray-400 mb-4">Téléversez ici les photos de mannequins/lifestyle qui s'afficheront tout en haut sur l'écran d'accueil du site.</p>
+      <p class="text-[11px] text-gray-400 mb-4">Téléversez ici les photos de mannequins/lifestyle qui s'afficheront tout en haut sur l'écran d'accueil du site (Sélection multiple autorisée).</p>
       
       <form action="/admin/add-hero-media" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row gap-3 mb-4">
-        <input type="file" name="hero_photo" accept="image/*" required class="flex-grow bg-gray-950 text-xs p-2.5 rounded-xl border border-gray-800 text-gray-300">
+        <input type="file" name="hero_photos" accept="image/*" multiple required class="flex-grow bg-gray-950 text-xs p-2.5 rounded-xl border border-gray-800 text-gray-300">
         <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl uppercase shadow">
-          Téléverser le visuel
+          Téléverser les visuels
         </button>
       </form>
 
       <!-- Galerie des visuels mannequins actuels -->
-      <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-2">
+      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 pt-2">
         {% for media in hero_media %}
         <div class="relative group rounded-xl overflow-hidden border border-gray-800 aspect-square">
           <img src="{{ media.file_url }}" class="w-full h-full object-cover">
@@ -107,7 +138,34 @@
       </form>
     </div>
 
-    <!-- 4. CATALOGUE ACTUEL & MODIFICATION RAPIDE -->
+    <!-- 4. GÉRANCE DES DÉCLINAISONS (PHOTOS PAR COULEUR ET TAILLES) -->
+    <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 mb-8 shadow-xl">
+      <h2 class="text-xs font-bold uppercase mb-3 text-red-400">🎨 Gérance des Photos par Couleur & Stocks par Taille</h2>
+      <p class="text-[11px] text-gray-400 mb-4">Associez ici une photo spécifique et définissez la quantité en stock pour chaque couleur et taille (S, M, L, XL).</p>
+      
+      <form action="/admin/add-variant" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+        <select name="product_id" required class="bg-gray-950 text-xs p-2.5 rounded-xl border border-gray-800 text-white">
+          <option value="" disabled selected>Choisir un Article</option>
+          {% for p in products %}
+          <option value="{{ p.id }}">{{ p.name }}</option>
+          {% endfor %}
+        </select>
+        <input type="text" name="color" placeholder="Couleur (ex: Noir)" required class="bg-gray-950 text-xs p-2.5 rounded-xl border border-gray-800">
+        <select name="size" required class="bg-gray-950 text-xs p-2.5 rounded-xl border border-gray-800 text-white">
+          <option value="S">S</option>
+          <option value="M" selected>M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+        </select>
+        <input type="number" name="stock_qty" placeholder="Quantité" value="1" required class="bg-gray-950 text-xs p-2.5 rounded-xl border border-gray-800">
+        <input type="file" name="variant_photo" accept="image/*" class="bg-gray-950 text-xs p-2 rounded-xl border border-gray-800">
+        <button type="submit" class="sm:col-span-2 md:col-span-5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 rounded-xl uppercase shadow">
+          Enregistrer cette Déclinaison Couleur / Photo
+        </button>
+      </form>
+    </div>
+
+    <!-- 5. CATALOGUE ACTUEL & MODIFICATION RAPIDE -->
     <h2 class="text-xs font-bold uppercase mb-4 text-gray-400">Catalogue Actuel</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       {% for p in products %}
@@ -121,7 +179,7 @@
                 <button type="submit" class="text-red-500 hover:text-red-400 p-1">✕</button>
               </form>
             </div>
-            <p class="text-gray-400 mb-1 font-mono">{{ p.price }} FCFA (Stock: {{ p.stock_qty }})</p>
+            <p class="text-gray-400 mb-1 font-mono">{{ p.price }} FCFA (Stock Global: {{ p.stock_qty }})</p>
             <p class="text-[10px] text-gray-500">Couleurs : {{ p.options }}</p>
           </div>
         </div>
@@ -158,5 +216,21 @@
     </div>
 
   </div>
+
+  <script>
+    async function loadLiaReport() {
+      try {
+        const res = await fetch('/api/admin/lia-report');
+        const data = await res.json();
+        document.getElementById('liaStatus').innerText = data.status;
+        document.getElementById('liaModel').innerText = data.model;
+        document.getElementById('liaCatalog').innerText = data.catalog_synced_items + " articles";
+        document.getElementById('liaInteractions').innerText = data.rl_interactions_total + " échanges";
+      } catch(e) {
+        console.error("Erreur chargement rapport IA:", e);
+      }
+    }
+    window.onload = loadLiaReport;
+  </script>
 </body>
 </html>

@@ -51,13 +51,14 @@ class Product(db.Model):
     rating = db.Column(db.Float, default=5.0)
 
 class ProductVariant(db.Model):
-    """Gestion autonome des stocks par taille (S, M, L, XL) et couleur"""
+    """Gestion autonome des stocks par taille (S, M, L, XL), couleur et photo spécifique"""
     __tablename__ = 'product_variants'
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     color = db.Column(db.String(50), nullable=False)
     size = db.Column(db.String(20), nullable=False)
     stock_qty = db.Column(db.Integer, default=1)
+    image_url = db.Column(db.Text, nullable=True)
 
 class ProductMedia(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -101,10 +102,11 @@ class RLModelConfig(db.Model):
 with app.app_context():
     db.create_all()
 
-    # --- AUTO-MIGRATION SQL : Ajoute 'caption' si la colonne n'existe pas ---
+    # Auto-migrations SQL explicites pour compatibilité de structure
     try:
         with db.engine.connect() as conn:
             conn.execute(db.text("ALTER TABLE product_media ADD COLUMN IF NOT EXISTS caption VARCHAR(255);"))
+            conn.execute(db.text("ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS image_url TEXT;"))
             conn.commit()
     except Exception as e:
         print(f"Migration DB note : {e}")
@@ -126,10 +128,16 @@ with app.app_context():
         db.session.add(default_p)
         db.session.commit()
         
-        # Initialisation des variantes (S, M, L, XL)
+        # Initialisation des variantes (S, M, L, XL) avec l'image par défaut
         for color in ["Noir", "Blanc", "Bleu"]:
             for size in ["S", "M", "L", "XL"]:
-                db.session.add(ProductVariant(product_id=default_p.id, color=color, size=size, stock_qty=2))
+                db.session.add(ProductVariant(
+                    product_id=default_p.id, 
+                    color=color, 
+                    size=size, 
+                    stock_qty=2,
+                    image_url=default_p.image_url
+                ))
         db.session.commit()
 
 # --- NOTIFICATIONS ---
@@ -153,6 +161,30 @@ def notify_new_article(product):
     except Exception as e:
         print(f"Erreur notification Resend: {e}")
 
+# --- HELPER TELEVERSEMENT MEDIAS ---
+
+def save_uploaded_file(photo, subfolder="products"):
+    if not photo or photo.filename == '':
+        return ''
+    filename = secure_filename(photo.filename)
+    file_bytes = photo.read()
+    url = ''
+    if supabase:
+        try:
+            path = f"{subfolder}/{datetime.utcnow().timestamp()}_{filename}"
+            supabase.storage.from_("tataw-media").upload(path, file_bytes, file_options={"content-type": photo.content_type})
+            url = supabase.storage.from_("tataw-media").get_public_url(path)
+        except Exception:
+            pass
+    if not url:
+        target_dir = os.path.join('static', 'uploads', subfolder)
+        os.makedirs(target_dir, exist_ok=True)
+        filepath = os.path.join(target_dir, filename)
+        photo.seek(0)
+        photo.save(filepath)
+        url = f'/{filepath}'
+    return url
+
 # --- ROUTES PRINCIPALES ---
 
 @app.route('/api/ping')
@@ -170,7 +202,13 @@ def index():
 @app.route('/api/product-variants/<int:id>')
 def get_product_variants(id):
     variants = ProductVariant.query.filter_by(product_id=id).all()
-    data = [{'color': v.color, 'size': v.size, 'stock_qty': v.stock_qty} for v in variants]
+    data = [{
+        'id': v.id,
+        'color': v.color, 
+        'size': v.size, 
+        'stock_qty': v.stock_qty,
+        'image_url': v.image_url
+    } for v in variants]
     return jsonify({'variants': data})
 
 client = genai.Client()
@@ -182,29 +220,34 @@ def ai_assistant():
     history = data.get('history', [])
 
     if not user_msg:
-        return jsonify({'reply': "Yo ! Je suis l'assistant officiel de TATAW x OFFX. Comment puis-je t'aider aujourd'hui ?", 'products': []})
+        return jsonify({'reply': "Yo ! Je suis Lia, l'assistant officiel TATAW x OFFX. En quoi puis-je te styliser aujourd'hui ?", 'products': []})
 
     master_context = tataw_brain.get_full_context()
 
     system_instruction = f"""
-    Tu es l'Assistant IA Exclusif, expert et Ambassadeur de Marque pour TATAW x OFFX (Yaoundé / Douala).
-    Tu te comportes exactement comme un assistant haut de gamme, intelligent, conversationnel, chaleureux et extrêmement précis. Tu réponds de manière fluide, détaillée et structurée.
+    Tu es Lia, l'Assistant IA Exclusif, Expert Styliste et Ambassadeur de Marque pour TATAW x OFFX (Yaoundé / Douala).
+    Tu te comportes comme un personal shopper de haute voltige : charismatique, précis, chaleureux et passionné.
+
+    --- SOCLE D'EXPERTISE MODE & STREETWEAR ---
+    - Maîtrise totale des codes streetwear (oversize, boxy fit, layering, techwear, minimalisme urbain, contrastes de matières).
+    - Capable de conseiller les coupes idéales selon la morphologie, les associations de couleurs et de proposer des assemblages complets.
+    - Attitude urbaine, raffinée, accessible et professionnelle.
 
     {master_context}
 
     DIRECTIVES STRICTES :
-    1. LANGUE : Détecte automatiquement la langue de l'utilisateur (Français, Anglais, Pidgin) et réponds dans la même langue.
-    2. EXPERTISE VENTE & CONSEIL : Aide le client à choisir ses articles, explique les coupes (boxy), guide-le sur les tailles (S, M, L, XL) et les coloris disponibles.
-    3. HISTOIRE : Mets en avant l'alliance des deux frères (offx & nybe) et l'esprit nomade/streetwear de TATAW quand c'est pertinent.
+    1. LANGUE : Détecte automatiquement la langue (Français, Anglais, Pidgin) et réponds dans la même langue.
+    2. VENTE CROISÉE & CONSEIL : Utilise le catalogue ci-dessus en temps réel pour suggérer les tailles (S, M, L, XL), verifier les prix en FCFA et proposer des ensembles.
+    3. HISTOIRE : Valorise l'alliance des deux frères (offx & nybe) et l'identité nomade streetwear de TATAW.
     """
 
     try:
         chat_contents = [system_instruction]
         for h in history:
-            role = "Utilisateur" if h.get('sender') == 'user' else "Assistant TATAW"
+            role = "Utilisateur" if h.get('sender') == 'user' else "Assistant Lia (TATAW)"
             chat_contents.append(f"{role}: {h.get('text')}")
             
-        chat_contents.append(f"Utilisateur: {user_msg}\nAssistant TATAW:")
+        chat_contents.append(f"Utilisateur: {user_msg}\nAssistant Lia (TATAW):")
 
         response = client.models.generate_content(
             model='gemini-2.5-flash',
@@ -212,7 +255,7 @@ def ai_assistant():
         )
         return jsonify({'reply': response.text.strip(), 'products': []})
     except Exception as e:
-        return jsonify({'reply': "Salut ! Bienvenue chez TATAW x OFFX. Que puis-je faire pour toi ?", 'products': []})
+        return jsonify({'reply': "Yo ! Bienvenue chez TATAW x OFFX. Dis-moi ce que tu cherches aujourd'hui, je m'en occupe !", 'products': []})
 
 @app.route('/api/generate-image', methods=['POST'])
 def generate_image_route():
@@ -304,33 +347,44 @@ def admin():
     products = Product.query.all()
     promos = PromoCode.query.all()
     hero_media = ProductMedia.query.filter_by(media_type='hero_mannequin').all()
-    return render_template('admin.html', products=products, promos=promos, hero_media=hero_media, whatsapp_link=WHATSAPP_GROUP_LINK)
+    variants = ProductVariant.query.all()
+    return render_template('admin.html', products=products, promos=promos, hero_media=hero_media, variants=variants, whatsapp_link=WHATSAPP_GROUP_LINK)
+
+@app.route('/api/admin/lia-report')
+def get_lia_report():
+    """Génère un rapport d'état de l'IA (Lia) pour le centre de contrôle Admin"""
+    products_count = Product.query.count()
+    total_stock = db.session.query(db.func.sum(Product.stock_qty)).scalar() or 0
+    interactions_count = RLInteraction.query.count()
+    return jsonify({
+        'status': 'Opérationnel',
+        'model': 'gemini-2.5-flash',
+        'catalog_synced_items': products_count,
+        'total_units_tracked': total_stock,
+        'rl_interactions_total': interactions_count,
+        'last_sync': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+    })
 
 @app.route('/admin/add-hero-media', methods=['POST'])
 def add_hero_media():
     try:
-        photo = request.files.get('hero_photo')
-        if photo and photo.filename != '':
-            filename = secure_filename(photo.filename)
-            file_bytes = photo.read()
-            url = ''
-            if supabase:
-                try:
-                    path = f"hero/{datetime.utcnow().timestamp()}_{filename}"
-                    supabase.storage.from_("tataw-media").upload(path, file_bytes, file_options={"content-type": photo.content_type})
-                    url = supabase.storage.from_("tataw-media").get_public_url(path)
-                except Exception:
-                    pass
-            if not url:
-                os.makedirs('static/uploads', exist_ok=True)
-                filepath = os.path.join('static/uploads', filename)
-                photo.seek(0)
-                photo.save(filepath)
-                url = f'/{filepath}'
+        photos = request.files.getlist('hero_photos')
+        if not photos or photos[0].filename == '':
+            # Fallback champ unique si envoyé sous un autre nom
+            p = request.files.get('hero_photo')
+            photos = [p] if p else []
 
-            db.session.add(ProductMedia(product_id=0, file_url=url, media_type='hero_mannequin'))
+        count = 0
+        for photo in photos:
+            if photo and photo.filename != '':
+                url = save_uploaded_file(photo, subfolder="hero")
+                if url:
+                    db.session.add(ProductMedia(product_id=0, file_url=url, media_type='hero_mannequin'))
+                    count += 1
+        
+        if count > 0:
             db.session.commit()
-            flash("Visuel mannequin ajouté au carrousel avec succès !")
+            flash(f"{count} visuel(s) ajouté(s) au carrousel haut de page avec succès !")
         return redirect('/admin')
     except Exception as e:
         flash(f"Erreur visuel mannequin : {e}")
@@ -343,28 +397,13 @@ def add_product():
         first_image_url = ''
         saved_media = []
         
-        for idx, photo in enumerate(photos):
+        for photo in photos:
             if photo and photo.filename != '':
-                filename = secure_filename(photo.filename)
-                file_bytes = photo.read()
-                url = ''
-                if supabase:
-                    try:
-                        path_on_storage = f"products/{datetime.utcnow().timestamp()}_{filename}"
-                        supabase.storage.from_("tataw-media").upload(path_on_storage, file_bytes, file_options={"content-type": photo.content_type})
-                        url = supabase.storage.from_("tataw-media").get_public_url(path_on_storage)
-                    except Exception:
-                        pass
-                if not url:
-                    os.makedirs('static/uploads', exist_ok=True)
-                    filepath = os.path.join('static/uploads', filename)
-                    photo.seek(0)
-                    photo.save(filepath)
-                    url = f'/{filepath}'
-                
-                if not first_image_url:
-                    first_image_url = url
-                saved_media.append((url, 'image'))
+                url = save_uploaded_file(photo, subfolder="products")
+                if url:
+                    if not first_image_url:
+                        first_image_url = url
+                    saved_media.append((url, 'image'))
 
         if not first_image_url:
             first_image_url = "https://i.ibb.co/SXHNbgRS/Photoroom-20261006-212634.jpg"
@@ -389,7 +428,13 @@ def add_product():
         colors = [c.strip() for c in new_product.options.split(',')] if new_product.options else ['Noir']
         for color in colors:
             for size in ['S', 'M', 'L', 'XL']:
-                db.session.add(ProductVariant(product_id=new_product.id, color=color, size=size, stock_qty=2))
+                db.session.add(ProductVariant(
+                    product_id=new_product.id, 
+                    color=color, 
+                    size=size, 
+                    stock_qty=2,
+                    image_url=first_image_url
+                ))
         db.session.commit()
 
         for url, mtype in saved_media:
@@ -403,6 +448,47 @@ def add_product():
     except Exception as e:
         flash(f"Erreur : {str(e)}")
         return redirect('/admin')
+
+@app.route('/admin/add-variant', methods=['POST'])
+def add_variant():
+    """Route pour ajouter ou associer une photo/stock à une couleur et taille spécifique"""
+    try:
+        product_id = int(request.form['product_id'])
+        color = request.form['color'].strip()
+        size = request.form['size'].strip()
+        stock_qty = int(request.form.get('stock_qty', 1))
+
+        photo = request.files.get('variant_photo')
+        image_url = save_uploaded_file(photo, subfolder="variants") if photo else None
+
+        existing = ProductVariant.query.filter_by(product_id=product_id, color=color, size=size).first()
+        if existing:
+            existing.stock_qty = stock_qty
+            if image_url:
+                existing.image_url = image_url
+        else:
+            p = Product.query.get(product_id)
+            img = image_url or (p.image_url if p else '')
+            db.session.add(ProductVariant(
+                product_id=product_id,
+                color=color,
+                size=size,
+                stock_qty=stock_qty,
+                image_url=img
+            ))
+        db.session.commit()
+        flash("Déclinaison couleur/taille mise à jour !")
+    except Exception as e:
+        flash(f"Erreur ajout déclinaison : {e}")
+    return redirect('/admin')
+
+@app.route('/admin/delete-variant/<int:id>', methods=['POST'])
+def delete_variant(id):
+    variant = ProductVariant.query.get_or_404(id)
+    db.session.delete(variant)
+    db.session.commit()
+    flash("Déclinaison supprimée !")
+    return redirect('/admin')
 
 @app.route('/admin/update-product/<int:id>', methods=['POST'])
 def update_product(id):
@@ -418,23 +504,9 @@ def update_product(id):
 
         photo = request.files.get('image')
         if photo and photo.filename != '':
-            filename = secure_filename(photo.filename)
-            file_bytes = photo.read()
-            url = ''
-            if supabase:
-                try:
-                    path = f"products/{datetime.utcnow().timestamp()}_{filename}"
-                    supabase.storage.from_("tataw-media").upload(path, file_bytes, file_options={"content-type": photo.content_type})
-                    url = supabase.storage.from_("tataw-media").get_public_url(path)
-                except Exception:
-                    pass
-            if not url:
-                os.makedirs('static/uploads', exist_ok=True)
-                filepath = os.path.join('static/uploads', filename)
-                photo.seek(0)
-                photo.save(filepath)
-                url = f'/{filepath}'
-            product.image_url = url
+            url = save_uploaded_file(photo, subfolder="products")
+            if url:
+                product.image_url = url
 
         db.session.commit()
         flash("Article mis à jour avec succès !")
